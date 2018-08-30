@@ -1,7 +1,5 @@
 # UnQLite.swift
 
-[![Swift4 compatible][Swift4Badge]][Swift4Link]
-
 [Swift][]-language layer over [UnQLite][].
 
 ## Features
@@ -9,3 +7,7 @@
 
 ## Usage
 - Coming soon
+
+[Swift]: https://swift.org/
+[UnQLite]: https://unqlite.org
+[UnQLite.swift]: https://github.com/jlab13/UnQLite.swift
