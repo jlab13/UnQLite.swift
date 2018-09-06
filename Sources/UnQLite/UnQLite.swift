@@ -57,14 +57,76 @@ public enum UnQLiteOpenMode {
 public class UnQLite {
     private var dbRef: OpaquePointer?
     
+    public init(fileName: String, mode: UnQLiteOpenMode = .create) throws {
+        try self.checkCall {
+            unqlite_open(&dbRef, fileName, mode.rawMode)
+        }
+    }
+    
     deinit {
         unqlite_close(dbRef)
         self.dbRef = nil
     }
     
-    public init(fileName: String, mode: UnQLiteOpenMode = .create) throws {
-        try self.checkCall {
-            unqlite_open(&dbRef, fileName, mode.rawMode)
+    
+    // MARK: - Key Value storage
+
+    public subscript<T: Numeric>(key: String) -> T? {
+        get {
+            do {
+                return try self.numeric(forKey: key)
+            } catch {
+                return nil
+            }
+        }
+        set {
+            do {
+                if let val = newValue {
+                    try self.setNumeric(val, forKey: key)
+                } else {
+                    try self.removeObject(forKey: key)
+                }
+            } catch {}
+        }
+    }
+
+    public subscript(key: String) -> String? {
+        get {
+            do {
+                return try self.string(forKey: key)
+            } catch {
+                return nil
+            }
+        }
+        set {
+            do {
+                if let val = newValue {
+                    try self.set(val, forKey: key)
+                } else {
+                    try self.removeObject(forKey: key)
+                }
+            } catch {}
+
+        }
+    }
+    
+    public subscript(key: String) -> Data? {
+        get {
+            do {
+                return try self.data(forKey: key)
+            } catch {
+                return nil
+            }
+        }
+        set {
+            do {
+                if let val = newValue {
+                    try self.set(val, forKey: key)
+                } else {
+                    try self.removeObject(forKey: key)
+                }
+            } catch {}
+            
         }
     }
     
@@ -136,7 +198,31 @@ public class UnQLite {
         let ref = try self.fetch(forKey: defaultName)
         return ref.buf.load(as: T.self)
     }
+    
+    public func removeObject(forKey defaultName: String) throws {
+        try self.checkCall {
+            unqlite_kv_delete(dbRef, defaultName, -1)
+        }
+    }
 
+    public func contains(key: String) throws -> Bool {
+        var bufSize: unqlite_int64 = 0
+        let buf: UnsafeMutableRawPointer! = nil
+
+        let resultCode = unqlite_kv_fetch(dbRef, key, -1, buf, &bufSize)
+        switch resultCode {
+        case UNQLITE_OK:
+            return true
+        case UNQLITE_NOTFOUND:
+            return false
+        default:
+            throw self.error(by: resultCode)
+        }
+    }
+    
+    
+    // MARK: - Secondary functions
+    
     private func fetch(forKey defaultName: String) throws -> (buf: UnsafeMutableRawPointer, size: Int) {
         var bufSize: unqlite_int64 = 0
         var buf: UnsafeMutableRawPointer!
@@ -160,11 +246,20 @@ public class UnQLite {
     private func checkCall(_ handler: () -> Int32) throws {
         let resultCode = handler()
         guard resultCode == UNQLITE_OK else {
-            var buf: UnsafeMutablePointer<CChar>?
-            var len: CInt = 0
-            let msg = unqlite_last_error(dbRef, &buf, &len) == UNQLITE_OK && len > 0
-                ? String(bytesNoCopy: buf!, length: Int(len), encoding: .ascii, freeWhenDone: false) : nil
-            throw UnQLiteError(code: resultCode, message: msg)
+            throw self.error(by: resultCode)
         }
+    }
+    
+    private func error(by resultCode: CInt) -> Error {
+        if resultCode == UNQLITE_NOTFOUND {
+            return UnQLiteError(code: resultCode, message: "Key not found")
+        }
+        
+        var buf: UnsafeMutablePointer<CChar>?
+        var len: CInt = 0
+        let msg = unqlite_last_error(dbRef, &buf, &len) == UNQLITE_OK && len > 0
+            ? String(bytesNoCopy: buf!, length: Int(len), encoding: .ascii, freeWhenDone: false) : nil
+
+        return UnQLiteError(code: resultCode, message: msg)
     }
 }

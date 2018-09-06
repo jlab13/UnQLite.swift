@@ -5,11 +5,19 @@ import XCTest
 final class UnQLiteTests: XCTestCase {
 
     static var allTests = [
+//        ("Errors", testErrors),
         ("KeyValueInt", testKeyValueInt),
         ("KeyValueFloat", testKeyValueFloat),
         ("KeyValueDouble", testKeyValueDouble),
+        ("KeyValueSubscript", testKeyValueSubscript)
     ]
-    
+
+//    func testErrors() throws {
+//        let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
+//        let _ = try db.integer(forKey: "key_unknown")
+//
+//    }
+
 
     func testKeyValueInt() throws {
     	let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
@@ -69,6 +77,66 @@ final class UnQLiteTests: XCTestCase {
         try db.setNumeric(initialDouble, forKey: "double_generic")
         let readedDouble: Double = try db.numeric(forKey: "double_generic")
         XCTAssertEqual(initialDouble, readedDouble)
+    }
+    
+    func testKeyValueSubscript() throws {
+        let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
+
+        // Test Int
+        for i in 0..<100 {
+            let key = "key_\(i)"
+            db[key] = i
+            XCTAssertEqual(db[key], i)
+        }
+        
+        // Test UInt8
+        for i in 0..<100 {
+            let ui8 = UInt8(i)
+            let key = "key_\(i)"
+            db[key] = ui8
+            XCTAssertEqual(db[key], ui8)
+        }
+
+        // Test UInt16
+        for i in 0..<100 {
+            let ui16 = UInt16(i)
+            let key = "key_\(i)"
+            db[key] = ui16
+            XCTAssertEqual(db[key], ui16)
+        }
+
+        // Test UInt32
+        for i in 0..<100 {
+            let ui32 = UInt32(i)
+            let key = "key_\(i)"
+            db[key] = ui32
+            XCTAssertEqual(db[key], ui32)
+        }
+
+        // Test UInt64
+        for i in 0..<100 {
+            let ui64 = UInt64(i)
+            let key = "key_\(i)"
+            db[key] = ui64
+            XCTAssertEqual(db[key], ui64)
+        }
+
+        // Test Float
+        for i in 0..<100 {
+            let f = Float(i)
+            let key = "key_\(i)"
+            db[key] = f
+            XCTAssertEqual(db[key], f)
+        }
+
+        // Test Double
+        for i in 0..<100 {
+            let d = Double(i)
+            let key = "key_\(i)"
+            db[key] = d
+            XCTAssertEqual(db[key], d)
+        }
+
     }
 
 }
