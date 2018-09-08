@@ -14,52 +14,34 @@ public struct UnQLiteError: Error, CustomDebugStringConvertible {
 }
 
 
-// MARK: - Enum open mode
+// MARK: - Open mode
 
-public enum UnQLiteOpenMode {
-    case readOnly
-    case readWrite
-    case create
-    case exclusive
-    case tempDb
-    case noMutex
-    case omitJournaling
-    case inMemory
-    case mmap
+public struct UnQLiteOpenMode: OptionSet {
+    public let rawValue: CUnsignedInt
     
-    fileprivate var rawMode: UInt32 {
-        switch self {
-        case .readOnly:
-            return UInt32(UNQLITE_OPEN_READONLY)
-        case .readWrite:
-            return UInt32(UNQLITE_OPEN_READWRITE)
-        case .create:
-            return UInt32(UNQLITE_OPEN_CREATE)
-        case .exclusive:
-            return UInt32(UNQLITE_OPEN_EXCLUSIVE)
-        case .tempDb:
-            return UInt32(UNQLITE_OPEN_TEMP_DB)
-        case .noMutex:
-            return UInt32(UNQLITE_OPEN_NOMUTEX)
-        case .omitJournaling:
-            return UInt32(UNQLITE_OPEN_OMIT_JOURNALING)
-        case .inMemory:
-            return UInt32(UNQLITE_OPEN_IN_MEMORY)
-        case .mmap:
-            return UInt32(UNQLITE_OPEN_MMAP)
-        }
+    public init(rawValue: CUnsignedInt) {
+        self.rawValue = rawValue
     }
+    
+    public static let readOnly = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_READONLY))
+    public static let readWrite = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_READWRITE))
+    public static let create = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_CREATE))
+    public static let exclusive = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_EXCLUSIVE))
+    public static let tempDb = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_TEMP_DB))
+    public static let noMutex = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_NOMUTEX))
+    public static let omitJournaling = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_OMIT_JOURNALING))
+    public static let inMemory = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_IN_MEMORY))
+    public static let mmap = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_MMAP))
 }
-
 
 // MARK: - UnQLite DataBase
 
 public class UnQLite {
-    private var dbRef: OpaquePointer?
+    internal var dbRef: OpaquePointer?
     
-    public init(fileName: String, mode: UnQLiteOpenMode = .create) throws {
+    public init(fileName: String = ":mem:", mode: UnQLiteOpenMode = .inMemory) throws {
         try self.checkCall {
-            unqlite_open(&dbRef, fileName, mode.rawMode)
+            unqlite_open(&dbRef, fileName, mode.rawValue)
         }
     }
     
@@ -220,6 +202,46 @@ public class UnQLite {
         }
     }
     
+    // MARK: - Transaction
+
+    public func begin() throws {
+        try self.checkCall {
+            unqlite_begin(dbRef)
+        }
+    }
+
+    public func commit() throws {
+        try self.checkCall {
+            unqlite_commit(dbRef)
+        }
+    }
+
+    public func rollback() throws {
+        try self.checkCall {
+            unqlite_rollback(dbRef)
+        }
+    }
+    
+    public func transaction(_ block: () throws -> Void) throws {
+        try self.begin()
+        do {
+            try block()
+            try self.commit()
+        } catch {
+            try self.rollback()
+            throw error
+        }
+    }
+    
+    // MARK: - call & check unqlite response code
+
+    internal func checkCall(_ handler: () -> CInt) throws {
+        let resultCode = handler()
+        guard resultCode == UNQLITE_OK else {
+            throw self.error(by: resultCode)
+        }
+    }
+
     
     // MARK: - Secondary functions
     
@@ -241,13 +263,6 @@ public class UnQLite {
             throw error
         }
         return (buf, Int(bufSize))
-    }
-    
-    private func checkCall(_ handler: () -> Int32) throws {
-        let resultCode = handler()
-        guard resultCode == UNQLITE_OK else {
-            throw self.error(by: resultCode)
-        }
     }
     
     private func error(by resultCode: CInt) -> Error {

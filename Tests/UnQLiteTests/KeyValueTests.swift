@@ -2,24 +2,16 @@ import XCTest
 @testable import UnQLite
 
 
-final class UnQLiteTests: XCTestCase {
+final class KeyValueTests: XCTestCase {
 
     static var allTests = [
-//        ("Errors", testErrors),
-        ("KeyValueInt", testKeyValueInt),
-        ("KeyValueFloat", testKeyValueFloat),
-        ("KeyValueDouble", testKeyValueDouble),
-        ("KeyValueSubscript", testKeyValueSubscript)
+        ("int", testInt),
+        ("float", testFloat),
+        ("double", testDouble),
+        ("subscript", testSubscript)
     ]
 
-//    func testErrors() throws {
-//        let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
-//        let _ = try db.integer(forKey: "key_unknown")
-//
-//    }
-
-
-    func testKeyValueInt() throws {
+    func testInt() throws {
     	let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
 
     	try db.set(0, forKey: "int_zero")
@@ -37,7 +29,7 @@ final class UnQLiteTests: XCTestCase {
         XCTAssertEqual(initialInt, readedInt)
     }
     
-    func testKeyValueFloat() throws {
+    func testFloat() throws {
         let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
 
         try db.set(Float(0), forKey: "float_zero")
@@ -58,7 +50,7 @@ final class UnQLiteTests: XCTestCase {
         XCTAssertEqual(initialFloat, readedFloat)
     }
 
-    func testKeyValueDouble() throws {
+    func testDouble() throws {
         let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
         
         try db.set(Double(0), forKey: "double_zero")
@@ -79,7 +71,7 @@ final class UnQLiteTests: XCTestCase {
         XCTAssertEqual(initialDouble, readedDouble)
     }
     
-    func testKeyValueSubscript() throws {
+    func testSubscript() throws {
         let db = try UnQLite(fileName: ":mem:", mode: .inMemory)
 
         // Test Int
