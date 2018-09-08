@@ -37,17 +37,21 @@ public struct UnQLiteOpenMode: OptionSet {
 // MARK: - UnQLite DataBase
 
 public class UnQLite {
-    internal var dbRef: OpaquePointer?
+    internal var dbPtr: OpaquePointer?
+
+    public var version: String {
+        return String(cString: unqlite_lib_version())
+    }
     
     public init(fileName: String = ":mem:", mode: UnQLiteOpenMode = .inMemory) throws {
         try self.checkCall {
-            unqlite_open(&dbRef, fileName, mode.rawValue)
+            unqlite_open(&dbPtr, fileName, mode.rawValue)
         }
     }
     
     deinit {
-        unqlite_close(dbRef)
-        self.dbRef = nil
+        unqlite_close(dbPtr)
+        self.dbPtr = nil
     }
     
     
@@ -115,7 +119,7 @@ public class UnQLite {
     public func set(_ value: Data, forKey defaultName: String) throws {
         try value.withUnsafeBytes { (ptr: UnsafePointer<UInt8>) in
             try self.checkCall {
-                unqlite_kv_store(dbRef, defaultName , -1, ptr, unqlite_int64(value.count))
+                unqlite_kv_store(dbPtr, defaultName , -1, ptr, unqlite_int64(value.count))
             }
         }
     }
@@ -128,7 +132,7 @@ public class UnQLite {
     public func set(_ value: String, forKey defaultName: String) throws {
         try value.utf8CString.withUnsafeBytes { bufPtr in
             try self.checkCall {
-                unqlite_kv_store(dbRef, defaultName , -1, bufPtr.baseAddress, unqlite_int64(bufPtr.count))
+                unqlite_kv_store(dbPtr, defaultName , -1, bufPtr.baseAddress, unqlite_int64(bufPtr.count))
             }
         }
     }
@@ -172,7 +176,7 @@ public class UnQLite {
         }
         
         try self.checkCall {
-            unqlite_kv_store(dbRef, defaultName , -1, ptr, size)
+            unqlite_kv_store(dbPtr, defaultName , -1, ptr, size)
         }
     }
     
@@ -183,42 +187,42 @@ public class UnQLite {
     
     public func removeObject(forKey defaultName: String) throws {
         try self.checkCall {
-            unqlite_kv_delete(dbRef, defaultName, -1)
+            unqlite_kv_delete(dbPtr, defaultName, -1)
         }
     }
 
     public func contains(key: String) throws -> Bool {
         var bufSize: unqlite_int64 = 0
-        let buf: UnsafeMutableRawPointer! = nil
 
-        let resultCode = unqlite_kv_fetch(dbRef, key, -1, buf, &bufSize)
+        let resultCode = unqlite_kv_fetch(dbPtr, key, -1, nil, &bufSize)
         switch resultCode {
         case UNQLITE_OK:
             return true
         case UNQLITE_NOTFOUND:
             return false
         default:
-            throw self.error(by: resultCode)
+            throw self.error(for: resultCode)
         }
     }
     
+
     // MARK: - Transaction
 
     public func begin() throws {
         try self.checkCall {
-            unqlite_begin(dbRef)
+            unqlite_begin(dbPtr)
         }
     }
 
     public func commit() throws {
         try self.checkCall {
-            unqlite_commit(dbRef)
+            unqlite_commit(dbPtr)
         }
     }
 
     public func rollback() throws {
         try self.checkCall {
-            unqlite_rollback(dbRef)
+            unqlite_rollback(dbPtr)
         }
     }
     
@@ -233,30 +237,44 @@ public class UnQLite {
         }
     }
     
+
     // MARK: - call & check unqlite response code
 
     internal func checkCall(_ handler: () -> CInt) throws {
         let resultCode = handler()
         guard resultCode == UNQLITE_OK else {
-            throw self.error(by: resultCode)
+            throw self.error(for: resultCode)
         }
     }
 
     
     // MARK: - Secondary functions
     
+    internal func error(for resultCode: CInt) -> Error {
+        if resultCode == UNQLITE_NOTFOUND {
+            return UnQLiteError(code: resultCode, message: "Key not found")
+        }
+        
+        var buf: UnsafeMutablePointer<CChar>?
+        var len: CInt = 0
+        let msg = unqlite_config_err_log(dbPtr, &buf, &len) == UNQLITE_OK && len > 0
+            ? String(bytesNoCopy: buf!, length: Int(len), encoding: .ascii, freeWhenDone: false) : nil
+        
+        return UnQLiteError(code: resultCode, message: msg)
+    }
+
     private func fetch(forKey defaultName: String) throws -> (buf: UnsafeMutableRawPointer, size: Int) {
         var bufSize: unqlite_int64 = 0
         var buf: UnsafeMutableRawPointer!
         
         try self.checkCall {
-            unqlite_kv_fetch(dbRef, defaultName, -1, buf, &bufSize)
+            unqlite_kv_fetch(dbPtr, defaultName, -1, buf, &bufSize)
         }
         
         buf = UnsafeMutableRawPointer.allocate(byteCount: Int(bufSize), alignment: 0)
         do {
             try self.checkCall {
-                unqlite_kv_fetch(dbRef, defaultName, -1, buf, &bufSize)
+                unqlite_kv_fetch(dbPtr, defaultName, -1, buf, &bufSize)
             }
         } catch {
             buf.deallocate()
@@ -264,17 +282,5 @@ public class UnQLite {
         }
         return (buf, Int(bufSize))
     }
-    
-    private func error(by resultCode: CInt) -> Error {
-        if resultCode == UNQLITE_NOTFOUND {
-            return UnQLiteError(code: resultCode, message: "Key not found")
-        }
-        
-        var buf: UnsafeMutablePointer<CChar>?
-        var len: CInt = 0
-        let msg = unqlite_last_error(dbRef, &buf, &len) == UNQLITE_OK && len > 0
-            ? String(bytesNoCopy: buf!, length: Int(len), encoding: .ascii, freeWhenDone: false) : nil
 
-        return UnQLiteError(code: resultCode, message: msg)
-    }
 }
