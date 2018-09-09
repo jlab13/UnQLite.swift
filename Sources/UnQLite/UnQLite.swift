@@ -4,12 +4,16 @@ import CUnQLite
 
 // MARK: - Error
 
+
 public struct UnQLiteError: Error, CustomDebugStringConvertible {
     let code: Int32
     let message: String?
 
     public var debugDescription: String {
-        return "UnQLiteError (\(code)): " + (self.message ?? "Unknown")
+        if let message = self.message {
+            return "UnQLiteError: \(message) (\(code))"
+        }
+        return "UnQLiteError: (\(code))"
     }
 }
 
@@ -201,7 +205,7 @@ public class UnQLite {
         case UNQLITE_NOTFOUND:
             return false
         default:
-            throw self.error(for: resultCode)
+            throw self.errorMessage(with: resultCode)
         }
     }
     
@@ -240,17 +244,17 @@ public class UnQLite {
 
     // MARK: - call & check unqlite response code
 
-    internal func checkCall(_ handler: () -> CInt) throws {
+    internal func checkCall(file: String = #file, line: Int = #line, _ handler: () -> CInt) throws {
         let resultCode = handler()
         guard resultCode == UNQLITE_OK else {
-            throw self.error(for: resultCode)
+            print("\(file):\(line) code: \(resultCode)")
+            throw self.errorMessage(with: resultCode)
         }
     }
-
     
     // MARK: - Secondary functions
-    
-    internal func error(for resultCode: CInt) -> Error {
+
+    internal func errorMessage(with resultCode: CInt) -> Error {
         if resultCode == UNQLITE_NOTFOUND {
             return UnQLiteError(code: resultCode, message: "Key not found")
         }
@@ -258,7 +262,7 @@ public class UnQLite {
         var buf: UnsafeMutablePointer<CChar>?
         var len: CInt = 0
         let msg = unqlite_config_err_log(dbPtr, &buf, &len) == UNQLITE_OK && len > 0
-            ? String(bytesNoCopy: buf!, length: Int(len), encoding: .ascii, freeWhenDone: false) : nil
+            ? String(bytesNoCopy: buf!, length: Int(len), encoding: .utf8, freeWhenDone: false) : nil
         
         return UnQLiteError(code: resultCode, message: msg)
     }

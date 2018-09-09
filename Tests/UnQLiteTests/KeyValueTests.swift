@@ -13,24 +13,35 @@ final class KeyValueTests: XCTestCase {
     ]
 
     func testVM() throws {
-        let script = """
-$my_data = {
-    os_name: uname(),
-    date: __DATE__
-}
+        let script =
 """
-        
+$list_of_users = [
+    {
+        username: "Huey",
+        age: $age
+    }
+];
+
+db_create('users');
+db_store('users', $list_of_users);
+$users_from_db = db_fetch_all('users');
+"""
+//        let list_of_users = [
+//            ["username": "Huey", "age": 3],
+//            ["username": "Mickey", "age": 5],
+//        ]
         
         let db = try UnQLite()
         let vm = try VirtualMachine(db: db, script: script)
-        try vm.execute()
+        try vm.setValue(13, forKey: "age")
 
-        let my_data = try vm.value(forKey: "my_data")
+//        try vm.setValue(list_of_users, forKey: "list_of_users")
+        try vm.execute()
+        
         print("-------------------")
-        print(my_data)
+        print(try vm.value(forKey: "users_from_db"))
         print("-------------------")
     }
-
     
 //    func testInt() throws {
 //        let db = try UnQLite()

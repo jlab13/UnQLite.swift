@@ -49,21 +49,21 @@ public class VirtualMachine {
         ptr = unqlite_vm_extract_variable(vmPtr, key)
 
         if ptr == nil {
-            throw db.error(for: UNQLITE_NOTFOUND)
+            throw db.errorMessage(with: UNQLITE_NOTFOUND)
         }
         
         defer {
-            do { try self.releaseValuePtr(ptr) } catch {}
+            try? self.releaseValuePtr(ptr)
         }
         
-        return unqLiteValueToSwift(ptr)
+        return try unqLiteValueToSwift(self.db, ptr)
     }
     
     /// Create an `unqlite_value` corresponding to the given Python value.
     internal func createValuePtr(_ value: Any) throws -> OpaquePointer {
         var ptr: OpaquePointer!
         
-        if value is Array<Any>, value is Dictionary<String, Any> {
+        if value is [Any], value is [String: Any] {
             ptr = unqlite_vm_new_array(vmPtr)
         } else {
             ptr = unqlite_vm_new_scalar(vmPtr)
@@ -81,14 +81,20 @@ public class VirtualMachine {
 
 }
 
-private class ArrayWrapper {
-    var array = [Any]()
-}
+private final class CallbackUserData {
+    let db: UnQLite
+    var array: [Any]!
+    var dict:  [String: Any]!
 
-private class DictWrapper {
-    var dict = [String: Any]()
+    init(db: UnQLite, isArray: Bool) {
+        self.db = db
+        if isArray {
+            self.array = []
+        } else {
+            self.dict = [:]
+        }
+    }
 }
-
 
 func swiftToUnqLiteValue(_ vm: VirtualMachine, value: Any, ptr: OpaquePointer) throws {
     switch value {
@@ -100,13 +106,13 @@ func swiftToUnqLiteValue(_ vm: VirtualMachine, value: Any, ptr: OpaquePointer) t
         unqlite_value_double(ptr, value)
     case let value as String:
         unqlite_value_string(ptr, value, -1)
-    case let value as Array<Any>:
+    case let value as [Any]:
         for item in value {
             let itemPtr = try vm.createValuePtr(item)
             unqlite_array_add_elem(ptr, nil, itemPtr)
             try vm.releaseValuePtr(itemPtr)
         }
-    case let value as Dictionary<String, Any>:
+    case let value as [String: Any]:
         for (key, value) in value {
             let itemPtr = try vm.createValuePtr(value)
             unqlite_array_add_strkey_elem(ptr, key, itemPtr)
@@ -119,40 +125,69 @@ func swiftToUnqLiteValue(_ vm: VirtualMachine, value: Any, ptr: OpaquePointer) t
 }
 
 
-private func unqLiteValueToSwift(_ ptr: OpaquePointer) -> Any {
-    if unqlite_value_is_bool(ptr) != 0 {
-        return unqlite_value_to_bool(ptr) != 0
+private func unqLiteValueToSwift(_ db: UnQLite, _ ptr: OpaquePointer) throws -> Any {
+
+    if unqlite_value_is_json_object(ptr) != 0 {
+        let userData = CallbackUserData(db: db, isArray: false)
+        let info = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
+
+        try db.checkCall {
+            unqlite_array_walk(ptr, { (keyPtr, valPtr, info) in
+                let userData = Unmanaged<CallbackUserData>.fromOpaque(info!).takeUnretainedValue()
+                do {
+                    if let key = try unqLiteValueToSwift(userData.db, keyPtr!) as? String {
+                        let val = try unqLiteValueToSwift(userData.db, valPtr!)
+                        userData.dict[key] = val
+                        return UNQLITE_OK
+                    }
+                    return UNQLITE_ABORT
+                } catch {
+                    return UNQLITE_ABORT
+                }
+            }, info)
+        }
+        return userData.dict!
     }
-    if unqlite_value_is_int(ptr) != 0 {
-        return Int(unqlite_value_to_int64(ptr))
+
+    if unqlite_value_is_json_array(ptr) != 0 {
+        let userData = CallbackUserData(db: db, isArray: true)
+        let info = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
+        
+        try db.checkCall {
+            unqlite_array_walk(ptr, { (_, valPtr, info) in
+                do {
+                    let userData = Unmanaged<CallbackUserData>.fromOpaque(info!).takeUnretainedValue()
+                    let val = try unqLiteValueToSwift(userData.db, valPtr!)
+                    userData.array.append(val)
+                    return UNQLITE_OK
+                } catch {
+                    return UNQLITE_ABORT
+                }
+            }, info)
+        }
+        return userData.array!
     }
-    if unqlite_value_is_float(ptr) != 0 {
-        return unqlite_value_to_double(ptr)
-    }
+    
     if unqlite_value_is_string(ptr) != 0 {
         return String(cString: unqlite_value_to_string(ptr, nil))
     }
-    if unqlite_value_is_json_object(ptr) != 0 {
-        var info = DictWrapper()
-        unqlite_array_walk(ptr, { (keyPtr, valPtr, info) in
-            let info = Unmanaged<DictWrapper>.fromOpaque(info!).takeUnretainedValue()
-            if let key = unqLiteValueToSwift(keyPtr!) as? String {
-                let val = unqLiteValueToSwift(valPtr!)
-                info.dict[key] = val
-            }
-            return UNQLITE_OK
-        }, &info)
+    
+    if unqlite_value_is_int(ptr) != 0 {
+        return Int(unqlite_value_to_int64(ptr))
     }
-    if unqlite_value_is_json_array(ptr) != 0 {
-        var info = ArrayWrapper()
-        unqlite_array_walk(ptr, { (_, valPtr, info) in
-            let info = Unmanaged<ArrayWrapper>.fromOpaque(info!).takeUnretainedValue()
-            let val = unqLiteValueToSwift(valPtr!)
-            info.array.append(val)
-            return UNQLITE_OK
-        }, &info)
+    
+    if unqlite_value_is_float(ptr) != 0 {
+        return unqlite_value_to_double(ptr)
+    }
+    
+    if unqlite_value_is_bool(ptr) != 0 {
+        return unqlite_value_to_bool(ptr) != 0
+    }
+    
+    if unqlite_value_is_null(ptr) != 0 {
+        return NSNull()
     }
 
-    return 0
+    return NSNull()
 }
 
