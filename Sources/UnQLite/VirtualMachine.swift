@@ -4,13 +4,13 @@ import CUnQLite
 // MARK: Jx9 virtual-machine interface.
 
 public class VirtualMachine {
-    private let db: UnQLite
-    private var keys: Set<String>
+    var keys: Set<String>
     private var vmPtr: OpaquePointer?
+    internal let db: UnQLite
 
     public init(db: UnQLite, script: String) throws {
         self.db = db
-        self.keys = Set<String>()
+        self.keys = []
         try db.checkCall {
             unqlite_compile(db.dbPtr, script, -1, &vmPtr)
         }
@@ -31,23 +31,24 @@ public class VirtualMachine {
     public func setValue(_ value: Any, forKey key: String) throws {
         /// Since Jx9 does not make a private copy of the name,
         /// we need to keep it alive by adding it to a Set
-        self.keys.insert(key)
-        
         let ptr = try self.createValuePtr(value)
-        try  db.checkCall {
-            unqlite_vm_config_create_var(vmPtr, key, ptr)
-        }
-
+        
         /// Since Jx9 makes a private copy of the value,
         /// we do not need to keep the value alive
-        try self.releaseValuePtr(ptr)
+        defer {
+            try? self.releaseValuePtr(ptr)
+        }
+
+        try db.checkCall {
+            unqlite_vm_config_create_var(vmPtr, key, ptr)
+        }
     }
     
     /// Retrieve the value of a variable after the execution of the Jx9 script.
     public func value(forKey key: String) throws -> Any {
         var ptr: OpaquePointer! = nil
+        
         ptr = unqlite_vm_extract_variable(vmPtr, key)
-
         if ptr == nil {
             throw db.errorMessage(with: UNQLITE_NOTFOUND)
         }
@@ -55,25 +56,27 @@ public class VirtualMachine {
         defer {
             try? self.releaseValuePtr(ptr)
         }
-        
         return try unqLiteValueToSwift(self.db, ptr)
     }
     
     /// Create an `unqlite_value` corresponding to the given Python value.
-    internal func createValuePtr(_ value: Any) throws -> OpaquePointer {
+    internal func createValuePtr(_ value: Any) throws -> OpaquePointer! {
         var ptr: OpaquePointer!
         
         if value is [Any], value is [String: Any] {
             ptr = unqlite_vm_new_array(vmPtr)
+            print("unqlite_vm_new_array: \(ptr)")
         } else {
             ptr = unqlite_vm_new_scalar(vmPtr)
+            print("unqlite_vm_new_scalar: \(ptr)")
         }
         try swiftToUnqLiteValue(self, value: value, ptr: ptr)
         return ptr
     }
 
     /// Release the given `unqlite_value`.
-    internal func releaseValuePtr(_ ptr: OpaquePointer) throws {
+    internal func releaseValuePtr(_ ptr: OpaquePointer!) throws {
+        print("unqlite_vm_release_value: \(ptr)")
         try db.checkCall {
             unqlite_vm_release_value(vmPtr, ptr)
         }
@@ -96,37 +99,40 @@ private final class CallbackUserData {
     }
 }
 
-func swiftToUnqLiteValue(_ vm: VirtualMachine, value: Any, ptr: OpaquePointer) throws {
+func swiftToUnqLiteValue(_ vm: VirtualMachine, value: Any, ptr: OpaquePointer!) throws {
     switch value {
     case let value as Bool:
         unqlite_value_bool(ptr, CInt(value.hashValue))
+        print("unqlite_value_bool: \(ptr)")
     case let value as Int:
         unqlite_value_int64(ptr, unqlite_int64(value))
+        print("unqlite_value_int64: \(ptr)")
     case let value as Double:
         unqlite_value_double(ptr, value)
+        print("unqlite_value_double: \(ptr)")
     case let value as String:
         unqlite_value_string(ptr, value, -1)
+        print("unqlite_value_string: \(ptr)")
     case let value as [Any]:
         for item in value {
             let itemPtr = try vm.createValuePtr(item)
-            unqlite_array_add_elem(ptr, nil, itemPtr)
+            try vm.db.checkCall { unqlite_array_add_elem(ptr, nil, itemPtr) }
             try vm.releaseValuePtr(itemPtr)
         }
     case let value as [String: Any]:
         for (key, value) in value {
             let itemPtr = try vm.createValuePtr(value)
-            unqlite_array_add_strkey_elem(ptr, key, itemPtr)
+            try vm.db.checkCall { unqlite_array_add_strkey_elem(ptr, key, itemPtr) }
             try vm.releaseValuePtr(itemPtr)
         }
     default:
         unqlite_value_null(ptr)
+        print("unqlite_value_null: \(ptr)")
     }
-    try vm.releaseValuePtr(ptr)
 }
 
 
-private func unqLiteValueToSwift(_ db: UnQLite, _ ptr: OpaquePointer) throws -> Any {
-
+private func unqLiteValueToSwift(_ db: UnQLite, _ ptr: OpaquePointer!) throws -> Any {
     if unqlite_value_is_json_object(ptr) != 0 {
         let userData = CallbackUserData(db: db, isArray: false)
         let info = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
@@ -188,6 +194,7 @@ private func unqLiteValueToSwift(_ db: UnQLite, _ ptr: OpaquePointer) throws -> 
         return NSNull()
     }
 
+    // TODO: throw exception
     return NSNull()
 }
 
