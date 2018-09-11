@@ -38,6 +38,7 @@ public struct UnQLiteOpenMode: OptionSet {
     public static let mmap = UnQLiteOpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_MMAP))
 }
 
+
 // MARK: - UnQLite DataBase
 
 public class UnQLite {
@@ -57,66 +58,43 @@ public class UnQLite {
         unqlite_close(dbPtr)
         self.dbPtr = nil
     }
-    
-    
-    // MARK: - Key Value storage
 
     public subscript<T: Numeric>(key: String) -> T? {
         get {
-            do {
-                return try self.numeric(forKey: key)
-            } catch {
-                return nil
-            }
+            return try? self.numeric(forKey: key)
         }
         set {
-            do {
-                if let val = newValue {
-                    try self.setNumeric(val, forKey: key)
-                } else {
-                    try self.removeObject(forKey: key)
-                }
-            } catch {}
+            if let val = newValue {
+                try? self.setNumeric(val, forKey: key)
+            } else {
+                try? self.removeObject(forKey: key)
+            }
         }
     }
 
     public subscript(key: String) -> String? {
         get {
-            do {
-                return try self.string(forKey: key)
-            } catch {
-                return nil
-            }
+            return try? self.string(forKey: key)
         }
         set {
-            do {
-                if let val = newValue {
-                    try self.set(val, forKey: key)
-                } else {
-                    try self.removeObject(forKey: key)
-                }
-            } catch {}
-
+            if let val = newValue {
+                try? self.set(val, forKey: key)
+            } else {
+                try? self.removeObject(forKey: key)
+            }
         }
     }
     
     public subscript(key: String) -> Data? {
         get {
-            do {
-                return try self.data(forKey: key)
-            } catch {
-                return nil
-            }
+            return try? self.data(forKey: key)
         }
         set {
-            do {
-                if let val = newValue {
-                    try self.set(val, forKey: key)
-                } else {
-                    try self.removeObject(forKey: key)
-                }
-            } catch {}
-            
+            if let val = newValue {
+                try? self.set(val, forKey: key)
+            } else {
+                try? self.removeObject(forKey: key)
+            }
         }
     }
     
@@ -239,6 +217,10 @@ public class UnQLite {
             try self.rollback()
             throw error
         }
+    }
+    
+    public func vm(with script: String) throws -> VirtualMachine {
+        return try VirtualMachine(db: self, script: script)
     }
     
 

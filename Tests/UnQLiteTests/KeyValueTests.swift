@@ -24,13 +24,12 @@ $users_from_db = db_fetch_all('users');
             ["username": "Mickey", "age": 5],
         ]
         
-        let db = try UnQLite()
-        let vm = try VirtualMachine(db: db, script: script)
-        try vm.setValue(list_of_users, forKey: "list_of_users")
+        let vm = try UnQLite().vm(with: script)
+        vm["list_of_users"] = list_of_users
         try vm.execute()
         
         print("-------------------")
-        print(try vm.value(forKey: "users_from_db"))
+        print(vm["users_from_db"] ?? "")
         print("-------------------")
     }
     
