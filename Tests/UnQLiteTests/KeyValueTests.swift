@@ -9,7 +9,10 @@ final class KeyValueTests: XCTestCase {
         ("int", testInt),
         ("float", testFloat),
         ("double", testDouble),
-        ("subscript", testSubscript)
+        ("subscript", testSubscript),
+        ("string", testString),
+        ("data", testData),
+        ("codable", testCodable),
     ]
     
     override func setUp() {
@@ -126,6 +129,67 @@ final class KeyValueTests: XCTestCase {
             XCTAssertEqual(db[key], d)
         }
 
+    }
+    
+    func testString() throws {
+        let ascii    = String( (0x20...0x7E).compactMap { Character(Unicode.Scalar($0)!) } )
+        let cyrillic = String( (0x400...0x4FF).compactMap { Character(Unicode.Scalar($0)!) } )
+        let katakana = String( (0x30A0...0x30FF).compactMap { Character(Unicode.Scalar($0)!) } )
+        let emoji    = String( (0x1F600...0x1F64F).compactMap { Character(Unicode.Scalar($0)!) } )
+        
+        try db.set(ascii, forKey: "ascii")
+        try db.set(cyrillic, forKey: "cyrillic")
+        try db.set(katakana, forKey: "katakana")
+        try db.set(emoji, forKey: "emoji")
+        
+        XCTAssertEqual(try db.string(forKey: "ascii"), ascii)
+        XCTAssertEqual(try db.string(forKey: "cyrillic"), cyrillic)
+        XCTAssertEqual(try db.string(forKey: "katakana"), katakana)
+        XCTAssertEqual(try db.string(forKey: "emoji"), emoji)
+        
+        db["subscript_ascii"] = ascii
+        XCTAssertEqual(db["subscript_ascii"], ascii)
+        
+        db["subscript_cyrillic"] = cyrillic
+        XCTAssertEqual(db["subscript_cyrillic"], cyrillic)
+        
+        db["subscript_katakana"] = katakana
+        XCTAssertEqual(db["subscript_katakana"], katakana)
+        
+        db["subscript_emoji"] = emoji
+        XCTAssertEqual(db["subscript_emoji"], emoji)
+    }
+    
+    func testData() throws {
+        let data = Data(repeating: 0xFF, count: 1024)
+        try db.set(data, forKey: "data")
+        XCTAssertEqual(try db.data(forKey: "data"), data)
+        
+        let rndData = Data((0...2048).map { _ in UInt8(arc4random_uniform(256)) })
+        try db.set(rndData, forKey: "rnd_data")
+        XCTAssertEqual(try db.data(forKey: "rnd_data"), rndData)
+        
+        XCTAssertNotEqual(try db.data(forKey: "data"), try db.data(forKey: "rnd_data"))
+        
+        db["subscript_data"] = data
+        XCTAssertEqual(db["subscript_data"], data)
+        
+        db["subscript_rnd_data"] = rndData
+        XCTAssertEqual(db["subscript_rnd_data"], rndData)
+    }
+
+    func testCodable() throws {
+        struct TestRec: Codable, Equatable {
+            let id: Int
+            let title: String
+            let qty: Float
+            let price: Double
+        }
+
+        let rec = TestRec(id: 100, title: "Test title", qty: 1.3, price: 123.456)
+        try db.encode(rec, forKey: "rec")
+
+        XCTAssertEqual(try db.decode(TestRec.self, forKey: "rec"), rec)
     }
 
 }

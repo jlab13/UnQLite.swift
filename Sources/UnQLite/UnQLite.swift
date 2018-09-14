@@ -105,10 +105,20 @@ public class UnQLite {
             }
         }
     }
-    
+
     public func data(forKey defaultName: String) throws -> Data {
         let ref = try self.fetch(forKey: defaultName)
         return Data(bytesNoCopy: ref.buf, count: ref.size, deallocator: .free)
+    }
+
+    public func encode<T: Encodable>(_ value: T, forKey defaultName: String) throws {
+        let data = try JSONEncoder().encode(value)
+        try self.set(data, forKey: defaultName)
+    }
+    
+    public func decode<T: Decodable>(_ type: T.Type, forKey defaultName: String) throws -> T {
+        let data = try self.data(forKey: defaultName)
+        return try JSONDecoder().decode(type, from: data)
     }
 
     public func set(_ value: String, forKey defaultName: String) throws {
@@ -121,7 +131,7 @@ public class UnQLite {
 
     public func string(forKey defaultName: String) throws -> String {
         let ref = try self.fetch(forKey: defaultName)
-        return String(bytesNoCopy: ref.buf, length: ref.size, encoding: .utf8, freeWhenDone: true)!
+        return String(bytesNoCopy: ref.buf, length: ref.size - 1, encoding: .utf8, freeWhenDone: true)!
     }
     
     public func set(_ value: Int, forKey defaultName: String) throws {
