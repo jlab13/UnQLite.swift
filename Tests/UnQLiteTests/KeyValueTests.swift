@@ -3,8 +3,6 @@ import XCTest
 
 
 final class KeyValueTests: XCTestCase {
-    var db: UnQLite!
-
     static var allTests = [
         ("int", testInt),
         ("float", testFloat),
@@ -14,9 +12,11 @@ final class KeyValueTests: XCTestCase {
         ("data", testData),
         ("codable", testCodable),
     ]
-    
+
+    var db: Connection!
+
     override func setUp() {
-        self.db = try? UnQLite()
+        self.db = try? Connection()
     }
     
     func testInt() throws {

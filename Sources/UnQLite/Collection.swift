@@ -8,16 +8,16 @@ public struct TmpError: Error {
 
 
 public final class Collection {
-    private let db: UnQLite
+    private let db: Connection
     let name: String
 
     /// Drop the collection and all associated records.
-    public static func drop(db: UnQLite, name: String) throws {
+    public static func drop(db: Connection, name: String) throws {
         try self.init(db: db, name: name).drop()
     }
     
     /// Create the named collection if not exists.
-    public init(db: UnQLite, name: String) throws {
+    public init(db: Connection, name: String) throws {
         self.db = db
         self.name = name
         try self.execute("if (!db_exists($collection)) {db_create($collection);}")

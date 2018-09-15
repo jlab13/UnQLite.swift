@@ -11,7 +11,7 @@
 
 #include "unqlite.h"
 
-int unqlite_config_err_log(unqlite *p_db, char **buf, int *len);
+int unqlite_config_err_log(unqlite *p_db, const int flag, char **buf, int *len);
 int unqlite_vm_config_create_var(unqlite_vm *p_vm, const char *name, unqlite_value *val);
 
 #endif /* unqlite_wraper_h */

@@ -8,8 +8,8 @@
 
 #include "include/unqlite_wraper.h"
 
-int unqlite_config_err_log(unqlite *p_db, char **buf, int *len) {
-    int rc = unqlite_config(p_db, UNQLITE_CONFIG_ERR_LOG, buf, len);
+int unqlite_config_err_log(unqlite *p_db, const int flag, char **buf, int *len) {
+    int rc = unqlite_config(p_db, flag, buf, len);
     if (*len > 0 && (*buf)[(*len) - 1] == '\n') {
         (*len)--;
     }
