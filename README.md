@@ -1,6 +1,6 @@
 # UnQLite.swift
 
-[![GitHub][MITBadge]][MITLink]
+[![GitHub][LICENSEBadge]][LICENSELink]
 [![Swift4 compatible][Swift4Badge]][Swift4Link]
 
 [Swift][]-language layer over [UnQLite][].
@@ -16,8 +16,8 @@
 [UnQLite]: https://unqlite.org
 [UnQLite.swift]: https://github.com/jlab13/UnQLite.swift
 
-[Swift4Badge]: https://img.shields.io/badge/swift-4.1-orange.svg?style=flat
+[Swift4Badge]: https://img.shields.io/badge/swift-4.1-orange.svg
 [Swift4Link]: https://developer.apple.com/swift/
 
-[MITLink]: https://github.com/jlab13/UnQLite.swift/blob/master/LICENSE
-[MITBadge]: https://img.shields.io/github/license/mashape/apistatus.svg
+[LICENSELink]: https://github.com/jlab13/UnQLite.swift/blob/master/LICENSE
+[LICENSEBadge]: https://img.shields.io/badge/license-BSD%202--Clause-lightgray.svg
