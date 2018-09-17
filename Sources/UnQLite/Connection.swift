@@ -209,10 +209,11 @@ public class Connection {
     // MARK: - Secondary functions
     
     @discardableResult
-    internal func check(_ resultCode: CInt) throws -> CInt {
+    internal func check(_ resultCode: CInt, file: String = #file, line: Int = #line) throws -> CInt {
         guard let error = Result(resultCode: resultCode, db: self) else {
             return resultCode
         }
+//        print("ERROR \(error) \(file):\(line)")
         throw error
     }
 

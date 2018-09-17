@@ -8,7 +8,7 @@ import Darwin
 public final class VirtualMachine {
     private let db: Connection
     private var vmPtr: OpaquePointer?
-    private var variableNamesRetain = [UnsafeMutablePointer<Int8>]()
+    private var variableNamesRetain = [UnsafePointer<CChar>]()
 
     
     public init(db: Connection, script: String) throws {
@@ -46,15 +46,16 @@ public final class VirtualMachine {
         defer {
             try? self.releaseValuePtr(valPtr)
         }
-        
-        let nameLength = name.utf8.count
-        let namePtr = UnsafeMutablePointer<Int8>.allocate(capacity: nameLength)
-        namePtr.assign(from: name, count: nameLength)
-        
-        /// Since Jx9 does not make a private copy of the name,
-        /// we need to keep it alive by adding it to a retain array
-        self.variableNamesRetain.append(namePtr)
 
+        let nameUtf8 = name.utf8CString
+        let namePtr = UnsafeMutablePointer<CChar>.allocate(capacity: nameUtf8.count)
+        nameUtf8.withUnsafeBufferPointer { buf in
+            namePtr.assign(from: buf.baseAddress!, count: nameUtf8.count)
+        }
+
+        //        /// Since Jx9 does not make a private copy of the name,
+        //        /// we need to keep it alive by adding it to a retain array
+        self.variableNamesRetain.append(namePtr)
         try db.check(unqlite_vm_config_create_var(vmPtr, namePtr, valPtr))
     }
     
@@ -144,8 +145,8 @@ public final class VirtualMachine {
                         return UNQLITE_OK
                     }
                 } catch {}
-                    return UNQLITE_ABORT
-                }, userDataPtr))
+                return UNQLITE_ABORT
+            }, userDataPtr))
             return userData.instance
         }
         
@@ -171,12 +172,12 @@ public final class VirtualMachine {
             return String(cString: unqlite_value_to_string(ptr, nil))
         }
         
-        if unqlite_value_is_int(ptr) != 0 {
-            return Int(unqlite_value_to_int64(ptr))
-        }
-        
         if unqlite_value_is_float(ptr) != 0 {
             return unqlite_value_to_double(ptr)
+        }
+        
+        if unqlite_value_is_int(ptr) != 0 {
+            return Int(unqlite_value_to_int64(ptr))
         }
         
         if unqlite_value_is_bool(ptr) != 0 {

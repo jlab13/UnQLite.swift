@@ -12,7 +12,7 @@ public enum Result: Error {
         if resultCode == UNQLITE_NOTFOUND {
             self = .notFound
         } else {
-            var buf: UnsafeMutablePointer<Int8>?
+            var buf: UnsafeMutablePointer<CChar>?
             var len: CInt = 0
             let flag = resultCode == UNQLITE_COMPILE_ERR ? UNQLITE_CONFIG_JX9_ERR_LOG : UNQLITE_CONFIG_ERR_LOG
             let msg = unqlite_config_err_log(db.dbPtr, flag, &buf, &len) == UNQLITE_OK && len > 0
