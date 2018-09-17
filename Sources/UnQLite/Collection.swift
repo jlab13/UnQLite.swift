@@ -2,79 +2,94 @@ import Foundation
 import CUnQLite
 
 
-public struct TmpError: Error {
-    let message: String
-}
-
-
 public final class Collection {
     private let db: Connection
     let name: String
 
-    /// Drop the collection and all associated records.
-    public static func drop(db: Connection, name: String) throws {
-        try self.init(db: db, name: name).drop()
-    }
-    
-    /// Create the named collection if not exists.
-    public init(db: Connection, name: String) throws {
+    public init(db: Connection, name: String, isAutoCreate: Bool = true) throws {
         self.db = db
         self.name = name
-        try self.execute("if (!db_exists($collection)) {db_create($collection);}")
+
+        if isAutoCreate {
+            try self.create()
+        }
     }
     
-    public func lastRecordId() throws -> Int {
-        return try self.execute("$result = db_last_record_id($collection);")
+//    public var count: Int {
+//        return (try? self.recordCount()) ?? 0
+//    }
+    
+//    public subscript(recordId: Int) -> [String: Any]? {
+//        return try? self.fetch(by: recordId)
+//    }
+    
+    /// Create the named collection if not exists.
+    public func create() throws {
+        try self.execute("if (!db_exists($collection)) { db_create($collection); }")
     }
 
-    public func currentRecordId() throws -> Int {
-        return try self.execute("$result = db_current_record_id($collection);")
+    /// Drop the collection and all associated records.
+    public func drop() throws {
+        try self.execute("if (db_exists($collection)) { db_drop_collection($collection); }")
     }
     
-    public func resetCursor() throws {
-        try self.execute("db_reset_record_cursor($collection);")
+    public func lastId() throws -> Int {
+        return try self.execute("$result = db_last_record_id($collection);")
     }
     
-    public func count() throws -> Int {
+    public func recordCount() throws -> Int {
         return try self.execute("$result = db_total_records($collection);")
     }
-    
+
     public func fetch(by recordId: Int) throws -> [String: Any] {
         let script = "$result = db_fetch_by_id($collection, $record_id);"
         return try self.execute(script, variables: ["record_id": recordId])
     }
+
+//    public func currentId() throws -> Int {
+//        return try self.execute("$result = db_current_record_id($collection);")
+//    }
     
-    public func fetch() throws -> [String: Any] {
-        return try self.execute("$result = db_fetch($collection);")
-    }
-    
-    @discardableResult
-    public func append(_ record: [String: Any]) throws -> [String: Any] {
-        return try self.execute("$result = db_store($collection, $record);")
+//    public func resetCursor() throws {
+//        try self.execute("db_reset_record_cursor($collection);")
+//    }
+
+//    public func fetch() throws -> [String: Any] {
+//        let script = "$result = db_fetch($collection);"
+//        return try self.execute(script)
+//    }
+
+    public func fetchAll() throws -> [[String: Any]] {
+        return try self.execute("$result = db_fetch_all($collection);")
     }
 
     @discardableResult
     public func append(_ record: [String: Any]) throws -> Int {
-        return try self.execute("if (db_store($collection, $record)) { $result = db_last_record_id($collection); }")
+        let script = "if (db_store($collection, $record)) { $result = db_last_record_id($collection); }"
+        return try self.execute(script, variables: ["record": record])
+    }
+
+    @discardableResult
+    public func append(_ records: [[String: Any]]) throws -> Bool {
+        let script = "$result = db_store($collection, $records);"
+        return try self.execute(script, variables: ["records": records])
     }
     
-    public func update(record: [String: Any], by recordId: Int) throws {
+    @discardableResult
+    public func update(record: [String: Any], by recordId: Int) throws -> Bool {
         let script = "$result = db_update_record($collection, $record_id, $record);"
         return try self.execute(script, variables: ["record_id": recordId, "record": record])
     }
 
-    public func delete(by recordId: Int) throws {
+    @discardableResult
+    public func delete(by recordId: Int) throws -> Bool {
         let script = "$result = db_drop_record($collection, $record_id);"
-        try self.execute(script, variables: ["record_id": recordId])
+        return try self.execute(script, variables: ["record_id": recordId])
     }
     
-    public func errorLog() throws -> String {
-        return try self.execute("$result = db_errlog();")
-    }
-
-    private func drop() throws {
-        try self.execute("if (db_exists($collection)) { db_drop_collection($collection); }")
-    }
+//    public func errorLog() throws -> String {
+//        return try self.execute("$result = db_errlog();")
+//    }
 
     private func execute<T>(_ script: String, variables: [String: Any]? = nil) throws -> T {
         let vm = try db.vm(with: script)
@@ -84,8 +99,8 @@ public final class Collection {
         }
         try vm.execute()
         
-        guard let result = try vm.value(by: "result") as? T else {
-            throw TmpError(message: "Cast type result error")
+        guard let result = try vm.value(by: "result", release: true) as? T else {
+            throw Result.typeCastError
         }
         return result
     }

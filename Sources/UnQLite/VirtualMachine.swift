@@ -60,7 +60,7 @@ public final class VirtualMachine {
     }
     
     /// Retrieve the value of a variable after the execution of the Jx9 script.
-    public func value(by name: String, remove: Bool = false) throws -> Any {
+    public func value(by name: String, release: Bool = false) throws -> Any {
         var valPtr: OpaquePointer! = nil
         
         valPtr = unqlite_vm_extract_variable(vmPtr, name)
@@ -69,9 +69,7 @@ public final class VirtualMachine {
         }
 
         defer {
-            if remove {
-                try? self.releaseValuePtr(valPtr)
-            }
+            if release { try? self.releaseValuePtr(valPtr) }
         }
         
         return try value(from: valPtr)
@@ -79,7 +77,7 @@ public final class VirtualMachine {
     
     /// Retrieve and release the value of a variable after the execution of the Jx9 script.
     public func popValue(by name: String) throws -> Any {
-        return try self.value(by: name, remove: true)
+        return try self.value(by: name, release: true)
     }
 
     

@@ -52,6 +52,11 @@ public class Connection {
     public func vm(with script: String) throws -> VirtualMachine {
         return try VirtualMachine(db: self, script: script)
     }
+    
+    public func collection(with name: String) throws -> Collection {
+        return try Collection(db: self, name: name)
+    }
+
 
     public subscript<T: Numeric>(key: String) -> T? {
         get {
@@ -213,7 +218,7 @@ public class Connection {
         guard let error = Result(resultCode: resultCode, db: self) else {
             return resultCode
         }
-//        print("ERROR \(error) \(file):\(line)")
+        print("ERROR \(error) \(file):\(line)")
         throw error
     }
 

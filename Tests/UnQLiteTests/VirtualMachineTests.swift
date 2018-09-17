@@ -196,4 +196,22 @@ final class VirtualMachineTests: XCTestCase {
         XCTAssertEqual(obj?["vm_obj_str"] as? [String: String], objStr)
     }
 
+    func testSetTypeDouble() throws {
+        let script = """
+        db_create('users');
+        db_store('users', $list_of_users);
+        $users_from_db = db_fetch_all('users');
+        """
+
+        let vm = try db.vm(with: script)
+        vm["list_of_users"] = [
+            ["name": "Huey", "age": 3, "width": 13.5],
+            ["name": "Mickey", "age": 11, "width": 10.0],
+        ]
+
+        try vm.execute()
+
+        print(vm["users_from_db"] as Any)
+    }
+    
 }
