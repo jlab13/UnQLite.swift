@@ -2,22 +2,7 @@ import XCTest
 @testable import UnQLite
 
 
-final class KeyValueTests: XCTestCase {
-    static var allTests = [
-        ("int", testInt),
-        ("float", testFloat),
-        ("double", testDouble),
-        ("subscript", testSubscript),
-        ("string", testString),
-        ("data", testData),
-        ("codable", testCodable),
-    ]
-
-    var db: Connection!
-
-    override func setUp() {
-        self.db = try? Connection()
-    }
+final class KeyValueTests: BaseTestCase {
     
     func testInt() throws {
         try db.set(0, forKey: "int_zero")
@@ -177,19 +162,4 @@ final class KeyValueTests: XCTestCase {
         db["subscript_rnd_data"] = rndData
         XCTAssertEqual(db["subscript_rnd_data"], rndData)
     }
-
-    func testCodable() throws {
-        struct TestRec: Codable, Equatable {
-            let id: Int
-            let title: String
-            let qty: Float
-            let price: Double
-        }
-
-        let rec = TestRec(id: 100, title: "Test title", qty: 1.3, price: 123.456)
-        try db.encode(rec, forKey: "rec")
-
-        XCTAssertEqual(try db.decode(TestRec.self, forKey: "rec"), rec)
-    }
-
 }

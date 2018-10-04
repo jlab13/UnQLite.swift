@@ -7,8 +7,8 @@ import Darwin
 
 public final class VirtualMachine {
     private let db: Connection
-    private var vmPtr: OpaquePointer?
     private var variableNamesRetain = [UnsafePointer<CChar>]()
+    internal var vmPtr: OpaquePointer?
 
     
     public init(db: Connection, script: String) throws {
@@ -65,7 +65,7 @@ public final class VirtualMachine {
         
         valPtr = unqlite_vm_extract_variable(vmPtr, name)
         if valPtr == nil {
-            throw Result.notFound
+            throw UnQLiteError.notFound
         }
 
         defer {
@@ -121,7 +121,7 @@ public final class VirtualMachine {
         case let value as Double:
             try db.check(unqlite_value_double(ptr, value))
         case let value as Bool:
-            try db.check(unqlite_value_bool(ptr, CInt(value.hashValue)))
+            try db.check(unqlite_value_bool(ptr, value ? 1 : 0))
         default:
             try db.check(unqlite_value_null(ptr))
         }
@@ -129,16 +129,16 @@ public final class VirtualMachine {
     
     private func value(from ptr: OpaquePointer) throws -> Any {
         if unqlite_value_is_json_object(ptr) != 0 {
-            let userData = DictionaryUserData(self, [:])
+            let userData = VmDictionaryUserData(self, [:])
             let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
             try db.check(unqlite_array_walk(ptr, { (keyPtr, valPtr, userDataPtr) in
                 guard let keyPtr = keyPtr, let valPtr = valPtr, let userDataPtr = userDataPtr else {
                     return UNQLITE_ABORT
                 }
-                let userData = Unmanaged<DictionaryUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
+                let userData = Unmanaged<VmDictionaryUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
                 do {
-                    if let key = try userData.vm.value(from: keyPtr) as? String {
-                        let val = try userData.vm.value(from: valPtr)
+                    if let key = try userData.ptr.value(from: keyPtr) as? String {
+                        let val = try userData.ptr.value(from: valPtr)
                         userData.instance[key] = val
                         return UNQLITE_OK
                     }
@@ -149,15 +149,15 @@ public final class VirtualMachine {
         }
         
         if unqlite_value_is_json_array(ptr) != 0 {
-            let userData = ArrayUserData(self, [])
+            let userData = VmArrayUserData(self, [])
             let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
             try db.check(unqlite_array_walk(ptr, { (_, valPtr, userDataPtr) in
                 guard let valPtr = valPtr, let userDataPtr = userDataPtr else {
                     return UNQLITE_ABORT
                 }
-                let userData = Unmanaged<ArrayUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
+                let userData = Unmanaged<VmArrayUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
                 do {
-                    let val = try userData.vm.value(from: valPtr)
+                    let val = try userData.ptr.value(from: valPtr)
                     userData.instance.append(val)
                     return UNQLITE_OK
                 } catch {}
@@ -186,24 +186,23 @@ public final class VirtualMachine {
             return NSNull()
         }
 
-        throw Result.typeCastError
+        throw UnQLiteError.typeCastError
     }
+}
 
 
-    // MARK: -
-    // Class for passing parameters in to C callback function.
+// MARK: -
+// Class for passing parameters in to C callback function.
+
+private typealias VmDictionaryUserData = CallbackUserData<VirtualMachine, [String: Any]>
+private typealias VmArrayUserData = CallbackUserData<VirtualMachine, [Any]>
+
+internal final class CallbackUserData<T, V> {
+    let ptr: T
+    var instance: V
     
-    private typealias DictionaryUserData = CallbackUserData<[String: Any]>
-    private typealias ArrayUserData = CallbackUserData<[Any]>
-
-    private final class CallbackUserData<T> {
-        let vm: VirtualMachine
-        var instance: T
-        
-        init(_ vm: VirtualMachine, _ instance: T) {
-            self.vm = vm
-            self.instance = instance
-        }
+    init(_ vm: T, _ instance: V) {
+        self.ptr = vm
+        self.instance = instance
     }
-    
 }

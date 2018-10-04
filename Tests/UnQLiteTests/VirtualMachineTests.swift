@@ -2,39 +2,23 @@ import XCTest
 @testable import UnQLite
 
 
-final class VirtualMachineTests: XCTestCase {
-    static var allTests = [
-        ("getTypeCast", testGetTypeCast),
-        ("getObject", testGetObject),
-        ("setTypeCast", testSetTypeCast),
-        ("setTypeCastAsObj", testSetTypeCastAsObj),
-    ]
+let arrayInt   = (0..<100).map { $0 }
+let arrayDbl01 = arrayInt.map { Double($0) }
+let arrayDbl02 = arrayInt.map { Double($0) + 0.5 }
+let arrayStr   = arrayInt.map { "String number \($0)" }
+let objInt     = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayInt))
+let objDbl01   = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayDbl01))
+let objDbl02   = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayDbl02))
+let objStr     = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayStr))
 
-    var db: Connection!
-    var arrayInt = [Int]()
-    var arrayDlb = [Double]()
-    var arrayStr = [String]()
-    var objInt = [String: Int]()
-    var objDbl = [String: Double]()
-    var objStr = [String: String]()
 
-    override func setUp() {
-        super.setUp()
-        db = try! Connection()
-        
-        let itemCount = 4
-        arrayInt = (0..<itemCount).map { $0 }
-        arrayDlb = arrayInt.map { Double($0) + 0.5 }
-        arrayStr = arrayInt.map { "str\($0)" }
-        objInt = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayInt))
-        objDbl = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayDlb))
-        objStr = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayStr))
-    }
+final class VirtualMachineTests: BaseTestCase {
 
     func testGetTypeCast() throws {
         let script = """
         $vm_int = 1;
-        $vm_double = 1.0;
+        $vm_double_01 = 1.0;
+        $vm_double_02 = 1.5;
         $vm_true = true;
         $vm_false = false;
         $vm_str = "Hello VM";
@@ -47,7 +31,8 @@ final class VirtualMachineTests: XCTestCase {
         XCTAssertEqual(try vm.value(by: "vm_true") as? Bool, true)
         XCTAssertEqual(try vm.value(by: "vm_false") as? Bool, false)
         XCTAssertEqual(try vm.value(by: "vm_int") as? Int, 1)
-        XCTAssertEqual(try vm.value(by: "vm_double") as? Double, 1.0)
+        XCTAssertEqual(try vm.value(by: "vm_double_01") as? Double, 1.0)
+        XCTAssertEqual(try vm.value(by: "vm_double_02") as? Double, 1.5)
         XCTAssertEqual(try vm.value(by: "vm_str") as? String, "Hello VM")
         XCTAssertEqual(try vm.value(by: "vm_array") as? [Int], [0,1,2,3,4,5,6,7,8,9])
         XCTAssertEqual(try vm.value(by: "vm_obj") as? [String: Int], ["key1": 1, "key2": 2])
@@ -57,27 +42,48 @@ final class VirtualMachineTests: XCTestCase {
         let script = """
         $obj = {
             vm_int: 1,
-            vm_double: 1.1,
+            vm_double_01: 1.0,
+            vm_double_02: 1.5,
             vm_true: true,
             vm_false: false,
             vm_str: "Hello VM",
-            vm_array: [0,1,2,3,4,5,6,7,8,9],
-            vm_obj: {key1: 1, key2: 2}
+            vm_array_int: [0,1,2,3,4,5,6,7,8,9],
+            vm_array_dbl: [0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0],
+            vm_obj_int: {key1: 1, key2: 2},
+            vm_obj_dbl: {key1: 1.0, key2: 2.0}
         }
         """
+
+        let swObj: [String: Any] = [
+            "vm_int": 1,
+            "vm_double_01": 1.0,
+            "vm_double_02": 1.5,
+            "vm_true": true,
+            "vm_false": false,
+            "vm_str": "Hello VM",
+            "vm_array_int": [0,1,2,3,4,5,6,7,8,9],
+            "vm_array_dbl": [0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0],
+            "vm_obj_int": ["key1": 1, "key2": 2],
+            "vm_obj_dbl": ["key1": 1.0, "key2": 2.0]
+        ]
+
         let vm = try db.vm(with: script)
         try vm.execute()
 
-        let obj = try vm.value(by: "obj") as? [String: Any]
-        XCTAssertNotNil(obj)
+        let vmObj = try vm.value(by: "obj") as? [String: Any]
+        XCTAssertNotNil(vmObj)
+        XCTAssertTrue(compareDict(swObj, vmObj!))
 
-        XCTAssertEqual(obj?["vm_true"] as? Bool, true)
-        XCTAssertEqual(obj?["vm_false"] as? Bool, false)
-        XCTAssertEqual(obj?["vm_int"] as? Int, 1)
-        XCTAssertEqual(obj?["vm_double"] as? Double, 1.1)
-        XCTAssertEqual(obj?["vm_str"] as? String, "Hello VM")
-        XCTAssertEqual(obj?["vm_array"] as? [Int], [0,1,2,3,4,5,6,7,8,9])
-        XCTAssertEqual(obj?["vm_obj"] as? [String: Int], ["key1": 1, "key2": 2])
+        XCTAssertEqual(vmObj?["vm_true"] as? Bool, true)
+        XCTAssertEqual(vmObj?["vm_false"] as? Bool, false)
+        XCTAssertEqual(vmObj?["vm_int"] as? Int, 1)
+        XCTAssertEqual(vmObj?["vm_double_01"] as? Double, 1.0)
+        XCTAssertEqual(vmObj?["vm_double_02"] as? Double, 1.5)
+        XCTAssertEqual(vmObj?["vm_str"] as? String, "Hello VM")
+        XCTAssertEqual(vmObj?["vm_array_int"] as? [Int], [0,1,2,3,4,5,6,7,8,9])
+        XCTAssertEqual(vmObj?["vm_array_dbl"] as? [Double], [0,1,2,3,4,5,6,7,8,9])
+        XCTAssertEqual(vmObj?["vm_obj_int"] as? [String: Int], ["key1": 1, "key2": 2])
+        XCTAssertEqual(vmObj?["vm_obj_dbl"] as? [String: Double], ["key1": 1, "key2": 2])
     }
     
     func testSetTypeCast() throws {
@@ -89,21 +95,23 @@ final class VirtualMachineTests: XCTestCase {
         $vm_str = $sw_str;
 
         $vm_array_int = $sw_array_int;
-        $vm_array_dbl = $sw_array_dbl;
+        $vm_array_dbl_01 = $sw_array_dbl_01;
+        $vm_array_dbl_02 = $sw_array_dbl_02;
         $vm_array_str = $sw_array_str;
 
         $vm_obj_int = $sw_obj_int;
-        $vm_obj_dbl = $sw_obj_dbl;
+        $vm_obj_dbl_01 = $sw_obj_dbl_01;
+        $vm_obj_dbl_02 = $sw_obj_dbl_02;
         $vm_obj_str = $sw_obj_str;
         """
 
-        let sw_true = true
-        let sw_false = false
-        let sw_int = Int.max
+        let sw_true   = true
+        let sw_false  = false
+        let sw_int    = Int.max
         let sw_double = Double.greatestFiniteMagnitude
-        let sw_str = "Hello VM"
+        let sw_str    = "Hello VM"
 
-        let vm = try db.vm(with: script)
+        let vm        = try db.vm(with: script)
 
         try vm.setVariable(value: sw_true, by: "sw_true")
         try vm.setVariable(value: sw_false, by: "sw_false")
@@ -112,11 +120,13 @@ final class VirtualMachineTests: XCTestCase {
         try vm.setVariable(value: sw_str, by: "sw_str")
 
         try vm.setVariable(value: arrayInt, by: "sw_array_int")
-        try vm.setVariable(value: arrayDlb, by: "sw_array_dbl")
+        try vm.setVariable(value: arrayDbl01, by: "sw_array_dbl_01")
+        try vm.setVariable(value: arrayDbl02, by: "sw_array_dbl_02")
         try vm.setVariable(value: arrayStr, by: "sw_array_str")
 
         try vm.setVariable(value: objInt, by: "sw_obj_int")
-        try vm.setVariable(value: objDbl, by: "sw_obj_dbl")
+        try vm.setVariable(value: objDbl01, by: "sw_obj_dbl_01")
+        try vm.setVariable(value: objDbl02, by: "sw_obj_dbl_02")
         try vm.setVariable(value: objStr, by: "sw_obj_str")
 
         try vm.execute()
@@ -128,11 +138,13 @@ final class VirtualMachineTests: XCTestCase {
         XCTAssertEqual(try vm.value(by: "vm_str") as? String, sw_str)
 
         XCTAssertEqual(try vm.value(by: "vm_array_int") as? [Int], arrayInt)
-        XCTAssertEqual(try vm.value(by: "vm_array_dbl") as? [Double], arrayDlb)
+        XCTAssertEqual(try vm.value(by: "vm_array_dbl_01") as? [Double], arrayDbl01)
+        XCTAssertEqual(try vm.value(by: "vm_array_dbl_02") as? [Double], arrayDbl02)
         XCTAssertEqual(try vm.value(by: "vm_array_str") as? [String], arrayStr)
 
         XCTAssertEqual(try vm.value(by: "vm_obj_int") as? [String: Int], objInt)
-        XCTAssertEqual(try vm.value(by: "vm_obj_dbl") as? [String: Double], objDbl)
+        XCTAssertEqual(try vm.value(by: "vm_obj_dbl_01") as? [String: Double], objDbl01)
+        XCTAssertEqual(try vm.value(by: "vm_obj_dbl_02") as? [String: Double], objDbl02)
         XCTAssertEqual(try vm.value(by: "vm_obj_str") as? [String: String], objStr)
     }
     
@@ -145,19 +157,21 @@ final class VirtualMachineTests: XCTestCase {
             vm_double: $sw_double,
             vm_str: $sw_str,
             vm_array_int: $sw_array_int,
-            vm_array_dbl: $sw_array_dbl,
+            vm_array_dbl_01: $sw_array_dbl_01,
+            vm_array_dbl_02: $sw_array_dbl_02,
             vm_array_str: $sw_array_str,
             vm_obj_int: $sw_obj_int,
-            vm_obj_dbl: $sw_obj_dbl,
+            vm_obj_dbl_01: $sw_obj_dbl_01,
+            vm_obj_dbl_02: $sw_obj_dbl_02,
             vm_obj_str: $sw_obj_str,
         }
         """
 
-        let sw_true = true
-        let sw_false = false
-        let sw_int = Int.max
+        let sw_true   = true
+        let sw_false  = false
+        let sw_int    = Int.max
         let sw_double = Double.greatestFiniteMagnitude
-        let sw_str = "Hello VM"
+        let sw_str    = "Hello VM"
 
         let vm = try db.vm(with: script)
 
@@ -168,50 +182,52 @@ final class VirtualMachineTests: XCTestCase {
         try vm.setVariable(value: sw_str, by: "sw_str")
 
         try vm.setVariable(value: arrayInt, by: "sw_array_int")
-        try vm.setVariable(value: arrayDlb, by: "sw_array_dbl")
+        try vm.setVariable(value: arrayDbl01, by: "sw_array_dbl_01")
+        try vm.setVariable(value: arrayDbl02, by: "sw_array_dbl_02")
         try vm.setVariable(value: arrayStr, by: "sw_array_str")
 
         try vm.setVariable(value: objInt, by: "sw_obj_int")
-        try vm.setVariable(value: objDbl, by: "sw_obj_dbl")
+        try vm.setVariable(value: objDbl01, by: "sw_obj_dbl_01")
+        try vm.setVariable(value: objDbl02, by: "sw_obj_dbl_02")
         try vm.setVariable(value: objStr, by: "sw_obj_str")
 
         try vm.execute()
 
-        let obj = try vm.value(by: "obj") as? [String: Any]
-
-        XCTAssertNotNil(obj)
-
-        XCTAssertEqual(obj?["vm_true"] as? Bool, sw_true)
-        XCTAssertEqual(obj?["vm_false"] as? Bool, sw_false)
-        XCTAssertEqual(obj?["vm_int"] as? Int, sw_int)
-        XCTAssertEqual(obj?["vm_double"] as? Double, sw_double)
-        XCTAssertEqual(obj?["vm_str"] as? String, sw_str)
-
-        XCTAssertEqual(obj?["vm_array_int"] as? [Int], arrayInt)
-        XCTAssertEqual(obj?["vm_array_dbl"] as? [Double], arrayDlb)
-        XCTAssertEqual(obj?["vm_array_str"] as? [String], arrayStr)
-
-        XCTAssertEqual(obj?["vm_obj_int"] as? [String: Int], objInt)
-        XCTAssertEqual(obj?["vm_obj_dbl"] as? [String: Double], objDbl)
-        XCTAssertEqual(obj?["vm_obj_str"] as? [String: String], objStr)
-    }
-
-    func testSetTypeDouble() throws {
-        let script = """
-        db_create('users');
-        db_store('users', $list_of_users);
-        $users_from_db = db_fetch_all('users');
-        """
-
-        let vm = try db.vm(with: script)
-        vm["list_of_users"] = [
-            ["name": "Huey", "age": 3, "width": 13.5],
-            ["name": "Mickey", "age": 11, "width": 10.0],
+        let swObj: [String: Any] = [
+            "vm_true": sw_true,
+            "vm_false": sw_false,
+            "vm_int": sw_int,
+            "vm_double": sw_double,
+            "vm_str": sw_str,
+            "vm_array_int": arrayInt,
+            "vm_array_dbl_01": arrayDbl01,
+            "vm_array_dbl_02": arrayDbl02,
+            "vm_array_str": arrayStr,
+            "vm_obj_int": objInt,
+            "vm_obj_dbl_01": objDbl01,
+            "vm_obj_dbl_02": objDbl02,
+            "vm_obj_str": objStr
         ]
 
-        try vm.execute()
+        let vmObj = try vm.value(by: "obj") as? [String: Any]
 
-        print(vm["users_from_db"] as Any)
-    }
-    
+        XCTAssertNotNil(vmObj)
+        XCTAssertTrue(compareDict(swObj, vmObj!))
+
+        XCTAssertEqual(vmObj?["vm_true"] as? Bool, sw_true)
+        XCTAssertEqual(vmObj?["vm_false"] as? Bool, sw_false)
+        XCTAssertEqual(vmObj?["vm_int"] as? Int, sw_int)
+        XCTAssertEqual(vmObj?["vm_double"] as? Double, sw_double)
+        XCTAssertEqual(vmObj?["vm_str"] as? String, sw_str)
+
+        XCTAssertEqual(vmObj?["vm_array_int"] as? [Int], arrayInt)
+        XCTAssertEqual(vmObj?["vm_array_dbl_01"] as? [Double], arrayDbl01)
+        XCTAssertEqual(vmObj?["vm_array_dbl_02"] as? [Double], arrayDbl02)
+        XCTAssertEqual(vmObj?["vm_array_str"] as? [String], arrayStr)
+
+        XCTAssertEqual(vmObj?["vm_obj_int"] as? [String: Int], objInt)
+        XCTAssertEqual(vmObj?["vm_obj_dbl_01"] as? [String: Double], objDbl01)
+        XCTAssertEqual(vmObj?["vm_obj_dbl_02"] as? [String: Double], objDbl02)
+        XCTAssertEqual(vmObj?["vm_obj_str"] as? [String: String], objStr)
+    }    
 }

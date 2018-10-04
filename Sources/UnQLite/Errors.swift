@@ -1,14 +1,12 @@
 import CUnQLite
 
 
-public enum Result: Error {
+public enum UnQLiteError: Error {
     case notFound
     case typeCastError
     case unqlite(code: Int, message: String?)
     
-    init?(resultCode: CInt, db: Connection) {
-        guard resultCode != UNQLITE_OK else { return nil }
-        
+    init(resultCode: CInt, db: Connection) {
         if resultCode == UNQLITE_NOTFOUND {
             self = .notFound
         } else {

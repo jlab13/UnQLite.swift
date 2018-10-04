@@ -97,16 +97,6 @@ public class Connection {
         }
     }
     
-    public func encode<T: Encodable>(_ value: T, forKey defaultName: String) throws {
-        let data = try JSONEncoder().encode(value)
-        try self.set(data, forKey: defaultName)
-    }
-    
-    public func decode<T: Decodable>(_ type: T.Type, forKey defaultName: String) throws -> T {
-        let data = try self.data(forKey: defaultName)
-        return try JSONDecoder().decode(type, from: data)
-    }
-
     public func set(_ value: Data, forKey defaultName: String) throws {
         try value.withUnsafeBytes { (bufPtr) -> Void in
             try self.check(unqlite_kv_store(dbPtr, defaultName , -1, bufPtr, unqlite_int64(value.count)))
@@ -163,7 +153,7 @@ public class Connection {
         let ref = try self.fetch(forKey: defaultName)
         guard ref.size == MemoryLayout<T>.size else {
             ref.buf.deallocate()
-            throw Result.typeCastError
+            throw UnQLiteError.typeCastError
         }
         return ref.buf.bindMemory(to: T.self, capacity: 1).pointee
     }
@@ -177,7 +167,7 @@ public class Connection {
             var bufSize: unqlite_int64 = 0
             try self.check(unqlite_kv_fetch(dbPtr, key, -1, nil, &bufSize))
             return true
-        } catch Result.notFound {
+        } catch UnQLiteError.notFound {
             return false
         } catch {
             throw error
@@ -213,13 +203,13 @@ public class Connection {
     
     // MARK: - Secondary functions
     
-    @discardableResult
-    internal func check(_ resultCode: CInt, file: String = #file, line: Int = #line) throws -> CInt {
-        guard let error = Result(resultCode: resultCode, db: self) else {
-            return resultCode
+    @inline(__always)
+    internal func check(_ resultCode: CInt, file: String = #file, line: Int = #line) throws {
+        guard resultCode != UNQLITE_OK else {
+            return
         }
-        print("ERROR \(error) \(file):\(line)")
-        throw error
+        print("EROR: \(file):\(line)")
+        throw UnQLiteError(resultCode: resultCode, db: self)
     }
 
     private func fetch(forKey defaultName: String) throws -> (buf: UnsafeMutableRawPointer, size: Int) {

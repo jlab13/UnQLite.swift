@@ -8521,8 +8521,9 @@ JX9_PRIVATE int jx9_value_double(jx9_value *pVal, double Value)
 	jx9MemObjRelease(pVal);
 	pVal->x.rVal = (jx9_real)Value;
 	MemObjSetType(pVal, MEMOBJ_REAL);
-	/* Try to get an integer representation also */
-	jx9MemObjTryInteger(pVal);
+	/* Try to get an integer representation also
+    jx9MemObjTryInteger(pVal);
+    */
 	return JX9_OK;
 }
 /*

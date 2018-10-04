@@ -6,35 +6,30 @@ public final class Collection {
     private let db: Connection
     let name: String
 
-    public init(db: Connection, name: String, isAutoCreate: Bool = true) throws {
+    public init(db: Connection, name: String, create: Bool = true) throws {
         self.db = db
         self.name = name
 
-        if isAutoCreate {
+        if create {
             try self.create()
         }
     }
     
-//    public var count: Int {
-//        return (try? self.recordCount()) ?? 0
-//    }
-    
-//    public subscript(recordId: Int) -> [String: Any]? {
-//        return try? self.fetch(by: recordId)
-//    }
-    
     /// Create the named collection if not exists.
     public func create() throws {
-        try self.execute("if (!db_exists($collection)) { db_create($collection); }")
+        let script = "if (!db_exists($collection)) { db_create($collection); }"
+        try self.execute(script)
     }
 
     /// Drop the collection and all associated records.
     public func drop() throws {
-        try self.execute("if (db_exists($collection)) { db_drop_collection($collection); }")
+        let script = "if (db_exists($collection)) { db_drop_collection($collection); }"
+        try self.execute(script)
     }
     
     public func lastId() throws -> Int {
-        return try self.execute("$result = db_last_record_id($collection);")
+        let script = "$result = db_last_record_id($collection);"
+        return try self.execute(script)
     }
     
     public func recordCount() throws -> Int {
@@ -45,19 +40,6 @@ public final class Collection {
         let script = "$result = db_fetch_by_id($collection, $record_id);"
         return try self.execute(script, variables: ["record_id": recordId])
     }
-
-//    public func currentId() throws -> Int {
-//        return try self.execute("$result = db_current_record_id($collection);")
-//    }
-    
-//    public func resetCursor() throws {
-//        try self.execute("db_reset_record_cursor($collection);")
-//    }
-
-//    public func fetch() throws -> [String: Any] {
-//        let script = "$result = db_fetch($collection);"
-//        return try self.execute(script)
-//    }
 
     public func fetchAll() throws -> [[String: Any]] {
         return try self.execute("$result = db_fetch_all($collection);")
@@ -87,10 +69,31 @@ public final class Collection {
         return try self.execute(script, variables: ["record_id": recordId])
     }
     
-//    public func errorLog() throws -> String {
-//        return try self.execute("$result = db_errlog();")
-//    }
+    public func filter(_ isIncluded: ([String: Any]) throws -> Bool) throws -> [[String: Any]] {
+        let fnName = "_filter_fn"
+        let script = "$result = db_fetch_all($collection, _filter_fn)"
+        let vm = try db.vm(with: script)
+        
+        unqlite_create_function(vm.vmPtr, fnName, { (context, nargs, values) in
+            let context = Context(ctxPtr: context!)
+            let values = (0..<nargs).map {
+                context.value(from: values!.advanced(by: Int($0)).pointee!)
+            }
+            print(values)
+            return UNQLITE_OK
+        }, nil)
 
+        
+        try vm.setVariable(value: self.name, by: "collection")
+        try vm.execute()
+        unqlite_delete_function(vm.vmPtr, fnName)
+
+        guard let result = try vm.value(by: "result", release: true) as? [[String: Any]] else {
+            throw UnQLiteError.typeCastError
+        }
+        return result
+    }
+    
     private func execute<T>(_ script: String, variables: [String: Any]? = nil) throws -> T {
         let vm = try db.vm(with: script)
         try vm.setVariable(value: self.name, by: "collection")
@@ -100,7 +103,7 @@ public final class Collection {
         try vm.execute()
         
         guard let result = try vm.value(by: "result", release: true) as? T else {
-            throw Result.typeCastError
+            throw UnQLiteError.typeCastError
         }
         return result
     }
@@ -112,6 +115,72 @@ public final class Collection {
             try vm.setVariable(value: value, by: name)
         }
         try vm.execute()
+    }
+}
+
+
+private typealias CtxDictionaryUserData = CallbackUserData<Context, [String: Any]>
+private typealias CtxArrayUserData = CallbackUserData<Context, [Any]>
+
+
+private final class Context {
+    let ctxPtr: OpaquePointer
+    
+    init(ctxPtr: OpaquePointer) {
+        self.ctxPtr = ctxPtr
+    }
+    
+    func value(from ptr: OpaquePointer) -> Any {
+        if unqlite_value_is_json_object(ptr) != 0 {
+            let userData = CtxDictionaryUserData(self, [:])
+            let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
+            unqlite_array_walk(ptr, { (keyPtr, valPtr, userDataPtr) in
+                guard let keyPtr = keyPtr, let valPtr = valPtr, let userDataPtr = userDataPtr else {
+                    return UNQLITE_ABORT
+                }
+                let userData = Unmanaged<CtxDictionaryUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
+                if let key = userData.ptr.value(from: keyPtr) as? String {
+                    let val = userData.ptr.value(from: valPtr)
+                    userData.instance[key] = val
+                    return UNQLITE_OK
+                }
+                return UNQLITE_ABORT
+            }, userDataPtr)
+            return userData.instance
+        }
+        
+        if unqlite_value_is_json_array(ptr) != 0 {
+            let userData = CtxArrayUserData(self, [])
+            let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
+            unqlite_array_walk(ptr, { (_, valPtr, userDataPtr) in
+                guard let valPtr = valPtr, let userDataPtr = userDataPtr else {
+                    return UNQLITE_ABORT
+                }
+                let userData = Unmanaged<CtxArrayUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
+                let val = userData.ptr.value(from: valPtr)
+                userData.instance.append(val)
+                return UNQLITE_OK
+            }, userDataPtr)
+            return userData.instance
+        }
+        
+        if unqlite_value_is_string(ptr) != 0 {
+            return String(cString: unqlite_value_to_string(ptr, nil))
+        }
+        
+        if unqlite_value_is_float(ptr) != 0 {
+            return unqlite_value_to_double(ptr)
+        }
+        
+        if unqlite_value_is_int(ptr) != 0 {
+            return Int(unqlite_value_to_int64(ptr))
+        }
+        
+        if unqlite_value_is_bool(ptr) != 0 {
+            return unqlite_value_to_bool(ptr) != 0
+        }
+        
+        return NSNull()
     }
 
 }
