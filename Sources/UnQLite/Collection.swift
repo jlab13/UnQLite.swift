@@ -2,6 +2,9 @@ import Foundation
 import CUnQLite
 
 
+public typealias FilterCallback = ([String: Any]) -> Bool
+
+
 public final class Collection {
     private let db: Connection
     let name: String
@@ -69,31 +72,46 @@ public final class Collection {
         return try self.execute(script, variables: ["record_id": recordId])
     }
     
-    public func filter(_ isIncluded: ([String: Any]) throws -> Bool) throws -> [[String: Any]] {
+    public func filter(_ isIncluded: @escaping FilterCallback) throws -> [[String: Any]] {
         let fnName = "_filter_fn"
         let script = "$result = db_fetch_all($collection, _filter_fn)"
         let vm = try db.vm(with: script)
-        
-        unqlite_create_function(vm.vmPtr, fnName, { (context, nargs, values) in
-            let context = Context(ctxPtr: context!)
-            let values = (0..<nargs).map {
-                context.value(from: values!.advanced(by: Int($0)).pointee!)
-            }
-            print(values)
-            return UNQLITE_OK
-        }, nil)
 
-        
+        let context = Context(db: db, callback: isIncluded)
+        let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(context).toOpaque())
+
+        try db.check(unqlite_create_function(vm.vmPtr, fnName, { (ctxPtr, nargs, values) in
+            guard nargs == 1 else {
+                return UNQLITE_ABORT
+            }
+
+            let userDataPtr = unqlite_context_user_data(ctxPtr)
+            let context = Unmanaged<Context>.fromOpaque(userDataPtr!).takeUnretainedValue()
+            context.ctxPtr = ctxPtr
+
+            do {
+                guard let item = try context.value(from: values!.advanced(by: Int(0)).pointee!) as? [String: Any] else {
+                    return UNQLITE_ABORT
+                }
+                try context.setResult(value: context.callback(item))
+            } catch {
+                return UNQLITE_ABORT
+            }
+
+            return UNQLITE_OK
+        }, userDataPtr))
+
+
         try vm.setVariable(value: self.name, by: "collection")
         try vm.execute()
         unqlite_delete_function(vm.vmPtr, fnName)
 
-        guard let result = try vm.value(by: "result", release: true) as? [[String: Any]] else {
+        guard let result = try vm.variableValue(by: "result", release: true) as? [[String: Any]] else {
             throw UnQLiteError.typeCastError
         }
         return result
     }
-    
+
     private func execute<T>(_ script: String, variables: [String: Any]? = nil) throws -> T {
         let vm = try db.vm(with: script)
         try vm.setVariable(value: self.name, by: "collection")
@@ -102,7 +120,7 @@ public final class Collection {
         }
         try vm.execute()
         
-        guard let result = try vm.value(by: "result", release: true) as? T else {
+        guard let result = try vm.variableValue(by: "result", release: true) as? T else {
             throw UnQLiteError.typeCastError
         }
         return result
@@ -119,68 +137,39 @@ public final class Collection {
 }
 
 
-private typealias CtxDictionaryUserData = CallbackUserData<Context, [String: Any]>
-private typealias CtxArrayUserData = CallbackUserData<Context, [Any]>
+internal final class Context: ValueManager {
+    let db: Connection
+    let callback: FilterCallback
+    var ctxPtr: OpaquePointer!
 
-
-private final class Context {
-    let ctxPtr: OpaquePointer
-    
-    init(ctxPtr: OpaquePointer) {
-        self.ctxPtr = ctxPtr
+    init(db: Connection, callback: @escaping FilterCallback) {
+        self.db = db
+        self.callback = callback
     }
-    
-    func value(from ptr: OpaquePointer) -> Any {
-        if unqlite_value_is_json_object(ptr) != 0 {
-            let userData = CtxDictionaryUserData(self, [:])
-            let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
-            unqlite_array_walk(ptr, { (keyPtr, valPtr, userDataPtr) in
-                guard let keyPtr = keyPtr, let valPtr = valPtr, let userDataPtr = userDataPtr else {
-                    return UNQLITE_ABORT
-                }
-                let userData = Unmanaged<CtxDictionaryUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
-                if let key = userData.ptr.value(from: keyPtr) as? String {
-                    let val = userData.ptr.value(from: valPtr)
-                    userData.instance[key] = val
-                    return UNQLITE_OK
-                }
-                return UNQLITE_ABORT
-            }, userDataPtr)
-            return userData.instance
+
+    func setResult<T>(value: T) throws {
+        let valPtr = try self.createValuePtr(value)
+        try db.check(unqlite_result_value(ctxPtr, valPtr))
+        self.releaseValuePtr(valPtr)
+    }
+
+    /// Create an `unqlite_value` corresponding to the given Swift value.
+    internal func createValuePtr<T>(_ value: T) throws -> OpaquePointer {
+        var ptr: OpaquePointer!
+
+        if value is [Any] || value is [String: Any] {
+            ptr = unqlite_context_new_array(ctxPtr)
+        } else {
+            ptr = unqlite_context_new_scalar(ctxPtr)
         }
-        
-        if unqlite_value_is_json_array(ptr) != 0 {
-            let userData = CtxArrayUserData(self, [])
-            let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
-            unqlite_array_walk(ptr, { (_, valPtr, userDataPtr) in
-                guard let valPtr = valPtr, let userDataPtr = userDataPtr else {
-                    return UNQLITE_ABORT
-                }
-                let userData = Unmanaged<CtxArrayUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
-                let val = userData.ptr.value(from: valPtr)
-                userData.instance.append(val)
-                return UNQLITE_OK
-            }, userDataPtr)
-            return userData.instance
-        }
-        
-        if unqlite_value_is_string(ptr) != 0 {
-            return String(cString: unqlite_value_to_string(ptr, nil))
-        }
-        
-        if unqlite_value_is_float(ptr) != 0 {
-            return unqlite_value_to_double(ptr)
-        }
-        
-        if unqlite_value_is_int(ptr) != 0 {
-            return Int(unqlite_value_to_int64(ptr))
-        }
-        
-        if unqlite_value_is_bool(ptr) != 0 {
-            return unqlite_value_to_bool(ptr) != 0
-        }
-        
-        return NSNull()
+
+        try self.setValue(value, to: ptr)
+        return ptr
+    }
+
+    /// Release the given `unqlite_value`.
+    internal func releaseValuePtr(_ ptr: OpaquePointer) {
+        unqlite_context_release_value(ctxPtr, ptr)
     }
 
 }
