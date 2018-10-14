@@ -3,7 +3,7 @@ import PackageDescription
 
 
 let package = Package(
-    name: "UnQLite",
+    name: "UnQLite.swift",
     products: [.library(name: "UnQLite", targets: ["CUnQLite", "UnQLite"])],
     targets: [
         .target(name: "CUnQLite"),
