@@ -10,10 +10,9 @@ class BaseTestCase: XCTestCase {
         db = try! Connection()
     }
     
-    func compareDict(_ lhs: [String: Any], _ rhs: [String: Any]) -> Bool {
+    func compareDict(_ lhs: [AnyHashable: Any], _ rhs: [AnyHashable: Any]) -> Bool {
         let nsdl = NSDictionary(dictionary: lhs)
-        let nsdr = NSDictionary(dictionary: rhs)
-        return nsdl.isEqual(to: nsdr)
+        return nsdl.isEqual(to: rhs)
     }
     
 }

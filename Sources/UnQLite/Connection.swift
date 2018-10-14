@@ -2,14 +2,6 @@ import Foundation
 import CUnQLite
 
 
-//// MARK: - Error
-//
-//public enum UnQLiteError: Error {
-//    case keyNotFound
-//    case typeCastError
-//    case unqlite(code: Int, message: String?)
-//}
-
 // MARK: - Open mode
 
 public struct OpenMode: OptionSet {

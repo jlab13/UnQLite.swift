@@ -1,6 +1,5 @@
 import Foundation
 import CUnQLite
-import Darwin
 
 
 // MARK: Jx9 virtual-machine interface.
@@ -101,4 +100,3 @@ public final class VirtualMachine: ValueManager {
     }
 
 }
-

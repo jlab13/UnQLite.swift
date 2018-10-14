@@ -1,11 +1,8 @@
-## Main
+# OS X
 .DS_Store
 
-## Build generated
+# Xcode
 build/
-DerivedData/
-
-## Various settings
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -14,24 +11,17 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata/
-
-## Other
-*.moved-aside
+xcuserdata
 *.xccheckout
-*.xcscmblueprint
-
-## Obj-C/Swift specific
+*.moved-aside
+DerivedData
 *.hmap
 *.ipa
-*.dSYM.zip
-*.dSYM
+*.xcuserstate
 
-## Playgrounds
-timeline.xctimeline
-playground.xcworkspace
+# Carthage
+/Carthage/
 
 # Swift Package Manager
-/.build
-/Packages
-/*.xcodeproj
+.build
+Packages/
