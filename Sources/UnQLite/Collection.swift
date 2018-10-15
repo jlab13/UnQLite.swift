@@ -30,24 +30,6 @@ public final class Collection {
         try self.execute(script)
     }
     
-    public func lastId() throws -> Int {
-        let script = "$result = db_last_record_id($collection);"
-        return try self.execute(script)
-    }
-    
-    public func recordCount() throws -> Int {
-        return try self.execute("$result = db_total_records($collection);")
-    }
-
-    public func fetch(by recordId: Int) throws -> [String: Any] {
-        let script = "$result = db_fetch_by_id($collection, $record_id);"
-        return try self.execute(script, variables: ["record_id": recordId])
-    }
-
-    public func fetchAll() throws -> [[String: Any]] {
-        return try self.execute("$result = db_fetch_all($collection);")
-    }
-
     @discardableResult
     public func append(_ record: [String: Any]) throws -> Int {
         let script = "if (db_store($collection, $record)) { $result = db_last_record_id($collection); }"
@@ -55,10 +37,32 @@ public final class Collection {
     }
 
     @discardableResult
+    public func append(_ record: [ExpressionType: Any]) throws -> Int {
+        let record = record.compactMap { (tuple: (key: ExpressionType, value: Any)) -> (String, Any)? in
+            guard let key = tuple.key.field else { return nil }
+            return (key, tuple.value)
+        }
+        return try self.append(Dictionary(uniqueKeysWithValues: record))
+    }
+
+    @discardableResult
     public func append(_ records: [[String: Any]]) throws -> Bool {
         let script = "$result = db_store($collection, $records);"
         return try self.execute(script, variables: ["records": records])
     }
+
+    @discardableResult
+    public func append(_ records: [[ExpressionType: Any]]) throws -> Bool {
+        let records = records.compactMap { (item: [ExpressionType: Any]) -> [String: Any]? in
+            let result = item.compactMap { (tuple: (key: ExpressionType, value: Any)) -> (String, Any)? in
+                guard let key = tuple.key.field else { return nil }
+                return (key, tuple.value)
+            }
+            return Dictionary(uniqueKeysWithValues: result)
+        }
+        return try self.append(records)
+    }
+
     
     @discardableResult
     public func update(record: [String: Any], by recordId: Int) throws -> Bool {
@@ -70,6 +74,30 @@ public final class Collection {
     public func delete(by recordId: Int) throws -> Bool {
         let script = "$result = db_drop_record($collection, $record_id);"
         return try self.execute(script, variables: ["record_id": recordId])
+    }
+
+    public func lastId() throws -> Int {
+        let script = "$result = db_last_record_id($collection);"
+        return try self.execute(script)
+    }
+    
+    public func recordCount() throws -> Int {
+        return try self.execute("$result = db_total_records($collection);")
+    }
+    
+    public func fetch(by recordId: Int) throws -> [String: Any] {
+        let script = "$result = db_fetch_by_id($collection, $record_id);"
+        return try self.execute(script, variables: ["record_id": recordId])
+    }
+    
+    public func fetchAll() throws -> [[String: Any]] {
+        let script = "$result = db_fetch_all($collection);"
+        return try self.execute(script)
+    }
+
+    public func filter(_ expression: Expressible) throws -> [[String: Any]] {
+        let script = "$result = db_fetch_all($collection, function($rec) { return \(expression.raw); })"
+        return try self.execute(script)
     }
     
     public func filter(_ isIncluded: @escaping FilterCallback) throws -> [[String: Any]] {
@@ -85,8 +113,8 @@ public final class Collection {
                 return UNQLITE_ABORT
             }
 
-            let userDataPtr = unqlite_context_user_data(ctxPtr)
-            let context = Unmanaged<Context>.fromOpaque(userDataPtr!).takeUnretainedValue()
+            let pUserData = unqlite_context_user_data(ctxPtr)
+            let context = Unmanaged<Context>.fromOpaque(pUserData!).takeUnretainedValue()
             context.ctxPtr = ctxPtr
 
             do {

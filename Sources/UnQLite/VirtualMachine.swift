@@ -5,6 +5,7 @@ import CUnQLite
 // MARK: Jx9 virtual-machine interface.
 
 public final class VirtualMachine: ValueManager {
+    private var outputCallback: ((String) -> Void)?
     internal let db: Connection
     internal var vmPtr: OpaquePointer?
 
@@ -30,6 +31,24 @@ public final class VirtualMachine: ValueManager {
                 try? self.setVariable(value: value, by: name)
             }
         }
+    }
+    
+    /// This function is used to install a VM output consumer callback.
+    /// That is, an user defined closure responsible of consuming the VM output such
+    /// as redirecting it (i.e. The VM output) to STDOUT or sending it back to the connected peer.
+    public func setOutput(_ callback: @escaping ((String) -> Void)) throws {
+        self.outputCallback = callback
+
+        let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        try db.check(unqlite_vm_config_output(vmPtr, {(pOutPut, nLen, pUserData) in
+            guard let pUserData = pUserData,
+                let string = String(bytesNoCopy: pOutPut!, length: Int(nLen), encoding: .utf8, freeWhenDone: false)  else {
+                    return UNQLITE_ABORT
+            }
+            let vm = Unmanaged<VirtualMachine>.fromOpaque(pUserData).takeUnretainedValue()
+            vm.outputCallback?(string)
+            return UNQLITE_OK
+        }, userDataPtr))
     }
     
     public func execute() throws {
@@ -78,7 +97,6 @@ public final class VirtualMachine: ValueManager {
     public func popValue(by name: String) throws -> Any {
         return try self.variableValue(by: name, release: true)
     }
-
     
     /// Create an `unqlite_value` corresponding to the given Swift value.
     internal func createValuePtr<T>(_ value: T) throws -> OpaquePointer {

@@ -25,11 +25,27 @@ public struct OpenMode: OptionSet {
 
 // MARK: - UnQLite DataBase
 
-public class Connection {
+public final class Connection {
     internal var dbPtr: OpaquePointer?
 
-    public var version: String {
+    public static var version: String {
         return String(cString: unqlite_lib_version())
+    }
+    
+    public static var signature: String {
+        return String(cString: unqlite_lib_signature())
+    }
+
+    public static var ident: String {
+        return String(cString: unqlite_lib_ident())
+    }
+
+    public static var copyright: String {
+        return String(cString: unqlite_lib_copyright())
+    }
+
+    public static var isThreadsafe: Bool {
+        return unqlite_lib_is_threadsafe() != 0
     }
     
     public init(fileName: String = ":mem:", mode: OpenMode = .inMemory) throws {
