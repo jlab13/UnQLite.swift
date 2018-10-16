@@ -1,4 +1,3 @@
-import Foundation
 import CUnQLite
 
 
@@ -64,7 +63,6 @@ public final class Connection {
     public func collection(with name: String) throws -> Collection {
         return try Collection(db: self, name: name)
     }
-
 
     public subscript<T: Numeric>(key: String) -> T? {
         get {
@@ -208,8 +206,7 @@ public final class Connection {
         }
     }
 
-    
-    // MARK: - Secondary functions
+    // MARK: - Internal functions
     
     @inline(__always)
     internal func check(_ resultCode: CInt, file: String = #file, line: Int = #line) throws {

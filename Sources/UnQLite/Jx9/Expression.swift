@@ -88,14 +88,14 @@ func postfix(_ expression: Expressible, function: String = #function) -> Express
 
 extension Expressible {
     
-    public func contains(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
+    public func contains(_ aString: String, ignoreCase: Bool = false) -> Expression<Bool> {
         let jx9Func = ignoreCase ? "stripos" : "strpos"
-        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw))")
+        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \"\(aString)\")")
     }
     
-    public func equal(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
+    public func equal(_ aString: String, ignoreCase: Bool = false) -> Expression<Bool> {
         let jx9Func = ignoreCase ? "strcasecmp" : "strcmp"
-        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw)) == 0")
+        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \"\(aString)\") == 0")
     }
     
 }
@@ -105,6 +105,17 @@ extension String: Expressible {
     public var raw: String {
         return "\"\(self)\""
     }
+    
+    public func contains(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
+        let jx9Func = ignoreCase ? "stripos" : "strpos"
+        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw))")
+    }
+    
+    public func equal(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
+        let jx9Func = ignoreCase ? "strcasecmp" : "strcmp"
+        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw)) == 0")
+    }
+
 }
 
 extension Bool: Expressible {
