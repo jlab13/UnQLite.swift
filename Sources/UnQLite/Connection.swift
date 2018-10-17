@@ -27,23 +27,23 @@ public struct OpenMode: OptionSet {
 public final class Connection {
     internal var dbPtr: OpaquePointer?
 
-    public static var version: String {
+    public var version: String {
         return String(cString: unqlite_lib_version())
     }
     
-    public static var signature: String {
+    public var signature: String {
         return String(cString: unqlite_lib_signature())
     }
 
-    public static var ident: String {
+    public var ident: String {
         return String(cString: unqlite_lib_ident())
     }
 
-    public static var copyright: String {
+    public var copyright: String {
         return String(cString: unqlite_lib_copyright())
     }
 
-    public static var isThreadsafe: Bool {
+    public var isThreadsafe: Bool {
         return unqlite_lib_is_threadsafe() != 0
     }
     

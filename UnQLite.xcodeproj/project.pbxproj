@@ -148,6 +148,7 @@
 		63A4F9BD21734F0900C1521C /* UnQLite.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = UnQLite.playground; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		63E84070217344E4003F65FC /* UnQLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UnQLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E84078217344E4003F65FC /* UnQLiteTests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "UnQLiteTests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		63F1C2772177A0C000863044 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -306,6 +307,7 @@
 		637157782173240700FABA60 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63F1C2772177A0C000863044 /* libpthread.tbd */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

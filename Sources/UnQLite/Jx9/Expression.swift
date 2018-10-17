@@ -4,38 +4,17 @@ public protocol Expressible {
 }
 
 
-public class ExpressionType: Expressible, Hashable {
-    public static func == (lhs: ExpressionType, rhs: ExpressionType) -> Bool {
-        return lhs.raw == rhs.raw
-    }
-    
+public struct Expression<DataType>: Expressible {
     public let raw: String
     
-    public var hashValue: Int {
-        return self.raw.hashValue
-    }
     
-    public lazy var field: String? = {
-        let parts = self.raw.split(separator: ".")
-        return parts.count > 1 ? String(parts[1]) : nil
-    }()
-    
-    internal init(raw: String) {
+    public init(raw: String) {
         self.raw = raw
     }
-}
-
-
-public class Expression<DataType>: ExpressionType {
     
-    override init(raw: String) {
-        super.init(raw: raw)
-    }
-
     public init(_ field: String) {
-        super.init(raw: "$rec.\(field)")
+        self.init(raw: "$rec.\(field)")
     }
-
 }
 
 
@@ -88,16 +67,21 @@ func postfix(_ expression: Expressible, function: String = #function) -> Express
 
 extension Expressible {
     
-    public func contains(_ aString: String, ignoreCase: Bool = false) -> Expression<Bool> {
+    internal var field: String? {
+        let parts = self.raw.split(separator: ".")
+        return parts.count > 1 && parts.first == "$rec" ? String(parts[1]) : nil
+    }
+    
+    public func contains(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
         let jx9Func = ignoreCase ? "stripos" : "strpos"
-        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \"\(aString)\")")
+        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \(aExpression.raw))")
     }
     
-    public func equal(_ aString: String, ignoreCase: Bool = false) -> Expression<Bool> {
+    public func equal(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
         let jx9Func = ignoreCase ? "strcasecmp" : "strcmp"
-        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \"\(aString)\") == 0")
+        return Expression<Bool>(raw: "\(jx9Func)(\(self.raw), \(aExpression.raw)) == 0")
     }
-    
+
 }
 
 
@@ -105,17 +89,6 @@ extension String: Expressible {
     public var raw: String {
         return "\"\(self)\""
     }
-    
-    public func contains(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
-        let jx9Func = ignoreCase ? "stripos" : "strpos"
-        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw))")
-    }
-    
-    public func equal(_ aExpression: Expressible, ignoreCase: Bool = false) -> Expression<Bool> {
-        let jx9Func = ignoreCase ? "strcasecmp" : "strcmp"
-        return Expression<Bool>(raw: "\(jx9Func)(\"\(self)\", \(aExpression.raw)) == 0")
-    }
-
 }
 
 extension Bool: Expressible {

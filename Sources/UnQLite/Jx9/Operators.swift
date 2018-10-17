@@ -1,4 +1,21 @@
 
+// MARK: - Type & function for append record
+
+public typealias ExpressionValuePair = (key: Expressible, value: Any)
+
+precedencegroup FieldAssignment {
+    associativity: left
+    assignment: true
+    lowerThan: AssignmentPrecedence
+}
+
+infix operator <-: FieldAssignment
+
+public func <-<V: Expressible>(field: Expression<V>, value: V) -> ExpressionValuePair {
+    return (key: field, value: value)
+}
+
+
 // MARK: - Arithmetic Operators
 
 public func +(lhs: Expression<String>, rhs: Expression<String>) -> Expression<String> {
