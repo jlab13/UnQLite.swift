@@ -88,8 +88,8 @@ final class VirtualMachineTests: BaseTestCase {
 
         let vmObj = try vm.variableValue(by: "obj") as? [String: Any]
         XCTAssertNotNil(vmObj)
-        XCTAssertTrue(compareDict(swObj, vmObj!))
-
+        XCTAssertTrue(isEqualDict(swObj, vmObj!))
+        
         XCTAssertEqual(vmObj?["vm_true"] as? Bool, true)
         XCTAssertEqual(vmObj?["vm_false"] as? Bool, false)
         XCTAssertEqual(vmObj?["vm_int"] as? Int, 1)
@@ -228,7 +228,7 @@ final class VirtualMachineTests: BaseTestCase {
         let vmObj = try vm.variableValue(by: "obj") as? [String: Any]
 
         XCTAssertNotNil(vmObj)
-        XCTAssertTrue(compareDict(swObj, vmObj!))
+        XCTAssertTrue(isEqualDict(swObj, vmObj!))
 
         XCTAssertEqual(vmObj?["vm_true"] as? Bool, sw_true)
         XCTAssertEqual(vmObj?["vm_false"] as? Bool, sw_false)

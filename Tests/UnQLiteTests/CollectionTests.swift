@@ -39,7 +39,7 @@ final class CollectionTests: BaseTestCase {
         for id in [0, 1, 2, 3] {
             var item = try clProducts.fetch(recordId: id)
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[id]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[id]))
         }
         
         try clProducts.delete(recordId: 0)
@@ -73,7 +73,7 @@ final class CollectionTests: BaseTestCase {
             "is_four": false
         ]
 
-        XCTAssertTrue(compareDict(item, newRecord))
+        XCTAssertTrue(isEqualDict(item, newRecord))
     }
     
     func testFilter() throws {
@@ -82,7 +82,7 @@ final class CollectionTests: BaseTestCase {
 
         if var item = result.first {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[3]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[3]))
         }
     }
 
@@ -94,7 +94,7 @@ final class CollectionTests: BaseTestCase {
 
         if var item = result.first {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[3]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[3]))
         }
     }
 
@@ -108,12 +108,12 @@ final class CollectionTests: BaseTestCase {
         
         if var item = result.first {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[0]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[0]))
         }
         
         if var item = result.last {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[9]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[9]))
         }
     }
 
@@ -125,12 +125,12 @@ final class CollectionTests: BaseTestCase {
         
         if var item = result.first {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[0]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[0]))
         }
         
         if var item = result.last {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[9]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[9]))
         }
     }
 
@@ -144,12 +144,12 @@ final class CollectionTests: BaseTestCase {
         
         if var item = result.first {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[0]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[0]))
         }
         
         if var item = result.last {
             item.removeValue(forKey: "__id")
-            XCTAssertTrue(compareDict(item, CollectionTests.productsData[9]))
+            XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[9]))
         }
     }
 
