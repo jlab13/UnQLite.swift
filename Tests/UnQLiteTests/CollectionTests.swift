@@ -3,6 +3,16 @@ import XCTest
 
 
 final class CollectionTests: BaseTestCase {
+    static var allTests = [
+        ("testCollection", testCollection),
+        ("testFilter", testFilter),
+        ("testFilterExpression", testFilterExpression),
+        ("testFilterExpressionExt", testFilterExpressionExt),
+        ("testFilterExpressionContains", testFilterExpressionContains),
+        ("testFilterExpressionEqual", testFilterExpressionEqual),
+    ]
+
+
     static let productsCount = 10
     static var productsData: [[String: Any]]!
 
@@ -23,7 +33,7 @@ final class CollectionTests: BaseTestCase {
     }
 
     
-    func testProductsCollection() throws {
+    func testCollection() throws {
         XCTAssertEqual(try clProducts.recordCount(), CollectionTests.productsCount)
 
         for id in [0, 1, 2, 3] {
@@ -66,7 +76,7 @@ final class CollectionTests: BaseTestCase {
         XCTAssertTrue(compareDict(item, newRecord))
     }
     
-    func testProductsFilter() throws {
+    func testFilter() throws {
         let result = try clProducts.fetch { $0["id"] as? Int == 4 }
         XCTAssertEqual(result.count, 1)
 
@@ -76,7 +86,7 @@ final class CollectionTests: BaseTestCase {
         }
     }
 
-    func testProductsFilterExpression() throws {
+    func testFilterExpression() throws {
         let id = Expression<Int>("id")
 
         let result = try clProducts.fetch(id == 4)
@@ -88,7 +98,7 @@ final class CollectionTests: BaseTestCase {
         }
     }
 
-    func testProductsFilterExpressionExt() throws {
+    func testFilterExpressionExt() throws {
         let id = Expression<Int>("id")
         let qty = Expression<Int>("qty")
         let price = Expression<Double>("price")
@@ -107,7 +117,7 @@ final class CollectionTests: BaseTestCase {
         }
     }
 
-    func testProductsFilterExpressionContains() throws {
+    func testFilterExpressionContains() throws {
         let name = Expression<String>("name")
 
         let result = try clProducts.fetch(name.contains("name 1", ignoreCase: true))
@@ -124,7 +134,7 @@ final class CollectionTests: BaseTestCase {
         }
     }
 
-    func testProductsFilterExpressionEqual() throws {
+    func testFilterExpressionEqual() throws {
         let name = Expression<String>("name")
 
         let result = try clProducts.fetch(

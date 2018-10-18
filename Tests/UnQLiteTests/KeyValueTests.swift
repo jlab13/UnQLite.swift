@@ -3,6 +3,15 @@ import XCTest
 
 
 final class KeyValueTests: BaseTestCase {
+    static var allTests = [
+        ("testThreadsafe", testThreadsafe),
+        ("testInt", testInt),
+        ("testFloat", testFloat),
+        ("testDouble", testDouble),
+        ("testSubscript", testSubscript),
+        ("testString", testString),
+        ("testData", testData),
+    ]
     
     func testThreadsafe() {
         XCTAssertTrue(db.isThreadsafe)

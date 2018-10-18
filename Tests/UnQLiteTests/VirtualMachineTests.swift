@@ -13,7 +13,14 @@ let objStr     = Dictionary(uniqueKeysWithValues: zip(arrayStr, arrayStr))
 
 
 final class VirtualMachineTests: BaseTestCase {
-    
+    static var allTests = [
+        ("testOutPut", testOutPut),
+        ("testGetTypeCast", testGetTypeCast),
+        ("testGetObject", testGetObject),
+        ("testSetTypeCast", testSetTypeCast),
+        ("testSetTypeCastAsObj", testSetTypeCastAsObj),
+    ]
+
     func testOutPut() throws {
         var outputMsg: String?
         let vm = try db.vm(with: "print \"Hello world 🌍!\";")
