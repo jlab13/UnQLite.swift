@@ -4,6 +4,10 @@ import XCTest
 
 final class KeyValueTests: BaseTestCase {
     
+    func testThreadsafe() {
+        XCTAssertTrue(db.isThreadsafe)
+    }
+    
     func testInt() throws {
         try db.set(0, forKey: "int_zero")
         XCTAssertEqual(try db.integer(forKey: "int_zero"), 0)
@@ -150,7 +154,7 @@ final class KeyValueTests: BaseTestCase {
         try db.set(data, forKey: "data")
         XCTAssertEqual(try db.data(forKey: "data"), data)
         
-        let rndData = Data((0...2048).map { _ in UInt8(arc4random_uniform(256)) })
+        let rndData = Data((0...2048).map { _ in UInt8.random(in: 0...255) })
         try db.set(rndData, forKey: "rnd_data")
         XCTAssertEqual(try db.data(forKey: "rnd_data"), rndData)
         

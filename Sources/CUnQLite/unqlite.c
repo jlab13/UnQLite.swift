@@ -1,3 +1,5 @@
+#define UNQLITE_ENABLE_THREADS
+
 /*
  * Symisc UnQLite: An Embeddable NoSQL (Post Modern) Database Engine.
  * Copyright (C) 2012-2018, Symisc Systems http://unqlite.org/

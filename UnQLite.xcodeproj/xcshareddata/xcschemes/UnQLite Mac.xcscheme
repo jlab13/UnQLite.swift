@@ -37,14 +37,6 @@
                BlueprintName = "UnQLiteTests Mac"
                ReferencedContainer = "container:UnQLite.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "KeyValueTests">
-               </Test>
-               <Test
-                  Identifier = "VirtualMachineTests">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>
