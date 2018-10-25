@@ -2,31 +2,66 @@ import Foundation
 import CUnQLite
 
 
-// MARK: - Open mode
-
-public struct OpenMode: OptionSet {
-    public let rawValue: CUnsignedInt
-    
-    public init(rawValue: CUnsignedInt) {
-        self.rawValue = rawValue
-    }
-    
-    public static let readOnly = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_READONLY))
-    public static let readWrite = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_READWRITE))
-    public static let create = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_CREATE))
-    public static let exclusive = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_EXCLUSIVE))
-    public static let tempDb = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_TEMP_DB))
-    public static let noMutex = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_NOMUTEX))
-    public static let omitJournaling = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_OMIT_JOURNALING))
-    public static let inMemory = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_IN_MEMORY))
-    public static let mmap = OpenMode(rawValue: CUnsignedInt(UNQLITE_OPEN_MMAP))
-}
-
-
 // MARK: - UnQLite DataBase
 
 public final class Connection {
-    internal var dbPtr: OpaquePointer?
+
+    public enum ReadonlyMode {
+        case no
+        case yes
+
+        /// Obtain a read-only memory view of the whole database. You will get significant performance improvements.
+        case mmap
+
+        fileprivate var flags: CUnsignedInt {
+            switch self {
+            case .no:
+                return CUnsignedInt(UNQLITE_OPEN_CREATE)
+            case .yes:
+                return CUnsignedInt(UNQLITE_OPEN_READONLY)
+            case .mmap:
+                return CUnsignedInt(UNQLITE_OPEN_READONLY | UNQLITE_OPEN_MMAP)
+            }
+        }
+    }
+
+    public enum Location {
+        /// A private, in-memory database will be created. The in-memory database will vanish when the database
+        /// connection is closed. (equivalent to `.uri(":mem:")`).
+        case inMemory
+
+        /// A private, temporary on-disk database will be created. This private database will be automatically
+        /// deleted as soon as the database connection is closed.
+        case temporary
+
+        /// A database located at the given URI filename (or path).
+        /// - Parameter filename: A URI filename
+        case uri(String)
+
+        fileprivate func flags(_ uriDefaultFlags: CUnsignedInt) -> CUnsignedInt {
+            switch self {
+            case .inMemory:
+                return CUnsignedInt(UNQLITE_OPEN_IN_MEMORY)
+            case .temporary:
+                return CUnsignedInt(UNQLITE_OPEN_TEMP_DB)
+            default:
+                return uriDefaultFlags
+            }
+        }
+
+        fileprivate var filename: String? {
+            switch self {
+            case .inMemory:
+                return ":mem:"
+            case let .uri(uri):
+                return uri
+            default:
+                return nil
+            }
+        }
+    }
+
+    internal var dbPtr: OpaquePointer? = nil
 
     public var version: String {
         return String(cString: unqlite_lib_version())
@@ -47,11 +82,15 @@ public final class Connection {
     public var isThreadsafe: Bool {
         return unqlite_lib_is_threadsafe() != 0
     }
-    
-    public init(fileName: String = ":mem:", mode: OpenMode = .inMemory) throws {
-        try self.check(unqlite_open(&dbPtr, fileName, mode.rawValue))
+
+    public init(_ location: Location = .inMemory, readonly: ReadonlyMode = .no) throws {
+        try self.check(unqlite_open(&dbPtr, location.filename, location.flags(readonly.flags)))
     }
-    
+
+    public convenience init(_ filename: String, readonly: ReadonlyMode = .no) throws {
+        try self.init(.uri(filename), readonly: readonly)
+    }
+
     deinit {
         unqlite_close(dbPtr)
         self.dbPtr = nil
