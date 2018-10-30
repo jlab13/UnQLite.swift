@@ -1,6 +1,4 @@
 import XCTest
-import Foundation
-
 @testable import UnQLite
 
 
