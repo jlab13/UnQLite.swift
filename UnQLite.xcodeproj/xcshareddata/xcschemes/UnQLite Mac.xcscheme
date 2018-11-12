@@ -37,6 +37,14 @@
                BlueprintName = "UnQLiteTests Mac"
                ReferencedContainer = "container:UnQLite.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "CollectionTests/testFilter()">
+               </Test>
+               <Test
+                  Identifier = "CollectionTests/testFilterExpression()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>

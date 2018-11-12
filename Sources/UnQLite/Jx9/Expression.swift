@@ -7,13 +7,12 @@ public protocol Expressible {
 public struct Expression<DataType>: Expressible {
     public let raw: String
     
-    
     public init(raw: String) {
         self.raw = raw
     }
     
-    public init(_ field: String) {
-        self.init(raw: "$rec.\(field)")
+    public init(_ keyPath: String) {
+        self.init(raw: "\(expressionRecordVariable).\(keyPath)")
     }
 }
 

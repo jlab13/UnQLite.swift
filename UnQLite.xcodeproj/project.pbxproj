@@ -144,6 +144,7 @@
 		63715775217323CB00FABA60 /* BaseTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BaseTestCase.swift; path = Tests/UnQLiteTests/BaseTestCase.swift; sourceTree = "<group>"; };
 		63715776217323CB00FABA60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/UnQLiteTests/Info.plist; sourceTree = "<group>"; };
 		63715777217323CB00FABA60 /* KeyValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeyValueTests.swift; path = Tests/UnQLiteTests/KeyValueTests.swift; sourceTree = "<group>"; };
+		6380A23B219A03A60055F74E /* UnQLite.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = UnQLite.playground; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		63A4F9BC21734EF800C1521C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		63E84070217344E4003F65FC /* UnQLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UnQLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E84078217344E4003F65FC /* UnQLiteTests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "UnQLiteTests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -307,6 +308,7 @@
 		63A4F9BB21734EB600C1521C /* Metadata */ = {
 			isa = PBXGroup;
 			children = (
+				6380A23B219A03A60055F74E /* UnQLite.playground */,
 				63A4F9BC21734EF800C1521C /* README.md */,
 			);
 			name = Metadata;

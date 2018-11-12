@@ -1,19 +1,13 @@
+import Foundation
 import UnQLite
 
-let script = """
 
-vtf_this("/");
+let id = Expression<Int>("product.id")
+let product = Expression<Int>("product")
 
-"""
 
-do {
-    let db = try Connection()
-//    db.isThreadsafe
+let e = product == 4
+e.raw
 
-    let vm = try db.vm(with: script)
-    try vm.setOutput { print(">> \($0)") }
-    
-    try vm.execute()
-} catch {
-    print(error)
-}
+let u = URL(string: "http://test.org/test")!
+u.appendingPathComponent("path1sdf")

@@ -2,6 +2,7 @@ import CUnQLite
 
 
 public typealias FilterCallback = ([String: Any]) -> Bool
+internal let expressionRecordVariable = "$rec"
 
 
 public final class Collection {
@@ -90,17 +91,17 @@ public final class Collection {
         return try self.execute(script, variables: ["record_id": recordId])
     }
 
-    public func fetch(_ filterExpression: Expressible) throws -> [[String: Any]] {
-        let script = "$result = db_fetch_all($collection, function($rec) { return \(filterExpression.raw); })"
+    public func fetch(_ filter: Expressible) throws -> [[String: Any]] {
+        let script = "$result = db_fetch_all($collection, function(\(expressionRecordVariable)) { return \(filter.raw); })"
         return try self.execute(script)
     }
     
-    public func fetch(_ filterCallback: @escaping FilterCallback) throws -> [[String: Any]] {
+    public func fetch(_ filter: @escaping FilterCallback) throws -> [[String: Any]] {
         let fnName = "_filter_fn"
         let script = "$result = db_fetch_all($collection, _filter_fn)"
         let vm = try db.vm(with: script)
 
-        let context = Context(db: db, callback: filterCallback)
+        let context = Context(db: db, callback: filter)
         let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(context).toOpaque())
 
         try db.check(unqlite_create_function(vm.vmPtr, fnName, { (ctxPtr, nargs, values) in
