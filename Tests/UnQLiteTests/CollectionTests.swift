@@ -41,7 +41,7 @@ final class CollectionTests: BaseTestCase {
 
     
     func testCollection() throws {
-        XCTAssertEqual(try clProducts.recordCount(), CollectionTests.productsData.count)
+        XCTAssertEqual(try clProducts.count(), CollectionTests.productsData.count)
 
         for id in [0, 1, 2, 3] {
             var item = try clProducts.fetch(recordId: id)
@@ -50,10 +50,10 @@ final class CollectionTests: BaseTestCase {
         }
         
         try clProducts.delete(recordId: 0)
-        XCTAssertEqual(try clProducts.recordCount(), CollectionTests.productsData.count - 1)
+        XCTAssertEqual(try clProducts.count(), CollectionTests.productsData.count - 1)
 
         try clProducts.delete(recordId: 1)
-        XCTAssertEqual(try clProducts.recordCount(),CollectionTests.productsData.count - 2)
+        XCTAssertEqual(try clProducts.count(),CollectionTests.productsData.count - 2)
         
         let id = Expression<Int>("id")
         let name = Expression<String>("name")

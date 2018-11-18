@@ -39,8 +39,8 @@ public final class Collection {
     @discardableResult
     public func store(_ values: ExpressionValuePair ...) throws -> Int {
         let record = Dictionary(uniqueKeysWithValues: values.compactMap { item -> (String, Any)? in
-            guard let field = item.key.field else { return nil }
-            return (field, item.value)
+            guard let keyPath = item.key.keyPath else { return nil }
+            return (keyPath, item.value)
         })
         return try self.append(record)
     }
@@ -60,8 +60,8 @@ public final class Collection {
     @discardableResult
     public func update(recordId: Int, _ values: ExpressionValuePair ...) throws -> Bool {
         let record = Dictionary(uniqueKeysWithValues: values.compactMap { item -> (String, Any)? in
-            guard let field = item.key.field else { return nil }
-            return (field, item.value)
+            guard let keyPath = item.key.keyPath else { return nil }
+            return (keyPath, item.value)
         })
         return try self.update(recordId: recordId, record)
     }
@@ -77,7 +77,7 @@ public final class Collection {
         return try self.execute(script)
     }
     
-    public func recordCount() throws -> Int {
+    public func count() throws -> Int {
         return try self.execute("$result = db_total_records($collection);")
     }
     
@@ -117,7 +117,7 @@ public final class Collection {
                 guard let item = try context.value(from: values!.advanced(by: Int(0)).pointee!) as? [String: Any] else {
                     return UNQLITE_ABORT
                 }
-                try context.setResult(value: context.callback(item))
+                try context.setCallbackResult(value: context.callback(item))
             } catch {
                 return UNQLITE_ABORT
             }
@@ -171,7 +171,7 @@ internal final class Context: ValueManager {
         self.callback = callback
     }
 
-    func setResult<T>(value: T) throws {
+    func setCallbackResult<T>(value: T) throws {
         let valPtr = try self.createValuePtr(value)
         try db.check(unqlite_result_value(ctxPtr, valPtr))
         self.releaseValuePtr(valPtr)

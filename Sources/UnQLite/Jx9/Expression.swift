@@ -66,7 +66,7 @@ func postfix(_ expression: Expressible, function: String = #function) -> Express
 
 extension Expressible {
     
-    internal var field: String? {
+    internal var keyPath: String? {
         let parts = self.raw.split(separator: ".")
         return parts.count > 1 && parts.first == "$rec" ? String(parts[1]) : nil
     }

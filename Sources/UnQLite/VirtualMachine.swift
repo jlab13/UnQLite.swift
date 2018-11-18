@@ -70,8 +70,8 @@ public final class VirtualMachine: ValueManager {
             namePtr.assign(from: buf.baseAddress!, count: nameUtf8.count)
         }
 
-        //        /// Since Jx9 does not make a private copy of the name,
-        //        /// we need to keep it alive by adding it to a retain array
+        /// Since Jx9 does not make a private copy of the name,
+        /// we need to keep it alive by adding it to a retain array
         self.variableNamesRetain.append(namePtr)
         try db.check(unqlite_vm_config_create_var(vmPtr, namePtr, valPtr))
     }
