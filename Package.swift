@@ -10,5 +10,5 @@ let package = Package(
         .target(name: "UnQLite", dependencies: ["CUnQLite"]),
         .testTarget(name: "UnQLiteTests", dependencies: ["UnQLite"]),
     ],
-    swiftLanguageVersions: [4]
+    swiftLanguageVersions: [5]
 )

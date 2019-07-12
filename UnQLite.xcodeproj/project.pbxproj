@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		630BF8E122D8722F00BB558A /* ExpressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630BF8E022D8722F00BB558A /* ExpressionTests.swift */; };
+		630BF8E222D8722F00BB558A /* ExpressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630BF8E022D8722F00BB558A /* ExpressionTests.swift */; };
+		630BF8E322D8722F00BB558A /* ExpressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630BF8E022D8722F00BB558A /* ExpressionTests.swift */; };
 		6353A0992174FCB00063BE91 /* Expression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6353A0982174FCB00063BE91 /* Expression.swift */; };
 		6353A09A2174FCB00063BE91 /* Expression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6353A0982174FCB00063BE91 /* Expression.swift */; };
 		6353A09B2174FCB00063BE91 /* Expression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6353A0982174FCB00063BE91 /* Expression.swift */; };
@@ -118,6 +121,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		630BF8E022D8722F00BB558A /* ExpressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExpressionTests.swift; path = Tests/UnQLiteTests/ExpressionTests.swift; sourceTree = "<group>"; };
 		631F555E21732091000A423B /* CUnQLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CUnQLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6353A0982174FCB00063BE91 /* Expression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expression.swift; sourceTree = "<group>"; };
 		6353A09D2174FD050063BE91 /* Operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
@@ -293,6 +297,7 @@
 				63715777217323CB00FABA60 /* KeyValueTests.swift */,
 				63715773217323CB00FABA60 /* VirtualMachineTests.swift */,
 				63715774217323CB00FABA60 /* CollectionTests.swift */,
+				630BF8E022D8722F00BB558A /* ExpressionTests.swift */,
 			);
 			name = UnQLiteTests;
 			sourceTree = "<group>";
@@ -522,9 +527,11 @@
 					};
 					637157132173231A00FABA60 = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1020;
 					};
 					6371571B2173231A00FABA60 = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1020;
 					};
 					6371574B2173234300FABA60 = {
 						CreatedOnToolsVersion = 10.0;
@@ -549,6 +556,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 631F555221732053000A423B;
 			productRefGroup = 631F555F21732091000A423B /* Products */;
@@ -647,6 +655,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				630BF8E122D8722F00BB558A /* ExpressionTests.swift in Sources */,
 				637157942173255500FABA60 /* BaseTestCase.swift in Sources */,
 				637157962173255500FABA60 /* KeyValueTests.swift in Sources */,
 				637157952173255500FABA60 /* CollectionTests.swift in Sources */,
@@ -672,6 +681,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				630BF8E322D8722F00BB558A /* ExpressionTests.swift in Sources */,
 				6371579C2173255600FABA60 /* BaseTestCase.swift in Sources */,
 				6371579E2173255600FABA60 /* KeyValueTests.swift in Sources */,
 				6371579D2173255600FABA60 /* CollectionTests.swift in Sources */,
@@ -711,6 +721,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				630BF8E222D8722F00BB558A /* ExpressionTests.swift in Sources */,
 				63E84094217345F9003F65FC /* BaseTestCase.swift in Sources */,
 				63E84096217345F9003F65FC /* KeyValueTests.swift in Sources */,
 				63E84095217345F9003F65FC /* CollectionTests.swift in Sources */,
@@ -1057,7 +1068,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1136,7 +1147,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1213,7 +1224,7 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -1281,7 +1292,7 @@
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

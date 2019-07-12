@@ -2,7 +2,7 @@ import CUnQLite
 
 
 public typealias FilterCallback = ([String: Any]) -> Bool
-internal let expressionRecordVariable = "$rec"
+internal let rec = "$rec"
 
 
 public final class Collection {
@@ -92,7 +92,7 @@ public final class Collection {
     }
 
     public func fetch(_ filter: Expressible) throws -> [[String: Any]] {
-        let script = "$result = db_fetch_all($collection, function(\(expressionRecordVariable)) { return \(filter.raw); })"
+        let script = "$result = db_fetch_all($collection, function(\(rec)) { return \(filter.raw); })"
         return try self.execute(script)
     }
     

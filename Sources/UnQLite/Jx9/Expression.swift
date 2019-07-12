@@ -12,7 +12,7 @@ public struct Expression<DataType>: Expressible {
     }
     
     public init(_ keyPath: String) {
-        self.init(raw: "\(expressionRecordVariable).\(keyPath)")
+        self.init(raw: "\(rec).\(keyPath)")
     }
 }
 
@@ -44,23 +44,6 @@ extension String {
         return Expression<Void>(raw: "\(self)(\(expression.raw))")
     }
     
-}
-
-
-func infix(_ lhs: Expressible, _ rhs: Expressible, wrap: Bool = true, function: String = #function) -> Expressible {
-    return function.infix(lhs, rhs, wrap: wrap)
-}
-
-func wrap(_ expression: Expressible, function: String = #function) -> Expressible {
-    return function.wrap(expression)
-}
-
-func prefix(_ expression: Expressible, function: String = #function) -> Expressible {
-    return function.prefix(expression)
-}
-
-func postfix(_ expression: Expressible, function: String = #function) -> Expressible {
-    return function.postfix(expression)
 }
 
 

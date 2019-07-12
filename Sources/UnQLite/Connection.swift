@@ -143,60 +143,60 @@ public final class Connection {
         }
     }
     
-    public func set(_ value: Data, forKey defaultName: String) throws {
-        try value.withUnsafeBytes { (bufPtr) -> Void in
-            try self.check(unqlite_kv_store(dbPtr, defaultName , -1, bufPtr, unqlite_int64(value.count)))
+    public func set(_ value: Data, forKey name: String) throws {
+        try value.withUnsafeBytes { (bufPtr: UnsafeRawBufferPointer) -> Void in
+            try self.check(unqlite_kv_store(dbPtr, name , -1, bufPtr.baseAddress, unqlite_int64(value.count)))
         }
     }
 
-    public func data(forKey defaultName: String) throws -> Data {
-        let ref = try self.fetch(forKey: defaultName)
+    public func data(forKey name: String) throws -> Data {
+        let ref = try self.fetch(forKey: name)
         return Data(bytesNoCopy: ref.buf, count: ref.size, deallocator: .free)
     }
 
-    public func set(_ value: String, forKey defaultName: String) throws {
+    public func set(_ value: String, forKey name: String) throws {
         try value.utf8CString.withUnsafeBytes { (bufPtr)  -> Void in
-            try self.check(unqlite_kv_store(dbPtr, defaultName , -1, bufPtr.baseAddress, unqlite_int64(bufPtr.count)))
+            try self.check(unqlite_kv_store(dbPtr, name , -1, bufPtr.baseAddress, unqlite_int64(bufPtr.count)))
         }
     }
 
-    public func string(forKey defaultName: String) throws -> String {
-        let ref = try self.fetch(forKey: defaultName)
+    public func string(forKey name: String) throws -> String {
+        let ref = try self.fetch(forKey: name)
         return String(bytesNoCopy: ref.buf, length: ref.size - 1, encoding: .utf8, freeWhenDone: true)!
     }
     
-    public func set(_ value: Int, forKey defaultName: String) throws {
-        try setNumeric(value, forKey: defaultName)
+    public func set(_ value: Int, forKey name: String) throws {
+        try setNumeric(value, forKey: name)
     }
     
-    public func integer(forKey defaultName: String) throws -> Int {
-        return try self.numeric(forKey: defaultName)
+    public func integer(forKey name: String) throws -> Int {
+        return try self.numeric(forKey: name)
     }
 
-    public func set(_ value: Float, forKey defaultName: String) throws {
-        try setNumeric(value, forKey: defaultName)
+    public func set(_ value: Float, forKey name: String) throws {
+        try setNumeric(value, forKey: name)
     }
     
-    public func float(forKey defaultName: String) throws -> Float {
-        return try self.numeric(forKey: defaultName)
+    public func float(forKey name: String) throws -> Float {
+        return try self.numeric(forKey: name)
     }
 
-    public func set(_ value: Double, forKey defaultName: String) throws {
-        try setNumeric(value, forKey: defaultName)
+    public func set(_ value: Double, forKey name: String) throws {
+        try setNumeric(value, forKey: name)
     }
     
-    public func double(forKey defaultName: String) throws -> Double {
-        return try self.numeric(forKey: defaultName)
+    public func double(forKey name: String) throws -> Double {
+        return try self.numeric(forKey: name)
     }
 
-    public func setNumeric<T: Numeric>(_ value: T, forKey defaultName: String) throws {
+    public func setNumeric<T: Numeric>(_ value: T, forKey name: String) throws {
         var value = value
         let size = unqlite_int64(MemoryLayout.size(ofValue: value))
-        try self.check(unqlite_kv_store(dbPtr, defaultName , -1, &value, size))
+        try self.check(unqlite_kv_store(dbPtr, name , -1, &value, size))
     }
     
-    public func numeric<T: Numeric>(forKey defaultName: String) throws -> T {
-        let ref = try self.fetch(forKey: defaultName)
+    public func numeric<T: Numeric>(forKey name: String) throws -> T {
+        let ref = try self.fetch(forKey: name)
         guard ref.size == MemoryLayout<T>.size else {
             ref.buf.deallocate()
             throw UnQLiteError.typeCastError
@@ -204,8 +204,8 @@ public final class Connection {
         return ref.buf.bindMemory(to: T.self, capacity: 1).pointee
     }
     
-    public func removeObject(forKey defaultName: String) throws {
-        try self.check(unqlite_kv_delete(dbPtr, defaultName, -1))
+    public func removeObject(forKey name: String) throws {
+        try self.check(unqlite_kv_delete(dbPtr, name, -1))
     }
 
     public func contains(key: String) throws -> Bool {
@@ -257,15 +257,15 @@ public final class Connection {
         throw UnQLiteError(resultCode: resultCode, db: self)
     }
 
-    private func fetch(forKey defaultName: String) throws -> (buf: UnsafeMutableRawPointer, size: Int) {
+    private func fetch(forKey name: String) throws -> (buf: UnsafeMutableRawPointer, size: Int) {
         var bufSize: unqlite_int64 = 0
         var buf: UnsafeMutableRawPointer!
         
-        try self.check(unqlite_kv_fetch(dbPtr, defaultName, -1, buf, &bufSize))
+        try self.check(unqlite_kv_fetch(dbPtr, name, -1, buf, &bufSize))
         
         buf = UnsafeMutableRawPointer.allocate(byteCount: Int(bufSize), alignment: 1)
         do {
-            try self.check(unqlite_kv_fetch(dbPtr, defaultName, -1, buf, &bufSize))
+            try self.check(unqlite_kv_fetch(dbPtr, name, -1, buf, &bufSize))
         } catch {
             buf.deallocate()
             throw error
