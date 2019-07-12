@@ -1,8 +1,7 @@
-import Foundation
 import CUnQLite
 
 
-// MARK: - UnQLite DataBase
+// MARK: UnQLite DataBase
 
 public final class Connection {
 

@@ -1,45 +1,63 @@
 import CUnQLite
 
 
-internal protocol ValueManager: class {
-    var db: Connection { get }
+public final class CodableVirtualMachine {
+    private var variableNamesRetain = [UnsafePointer<CChar>]()
+    internal let db: Connection
+    internal var vmPtr: OpaquePointer!
 
-    func createValuePtr<T>(_ value: T) throws -> OpaquePointer
-    func releaseValuePtr(_ ptr: OpaquePointer)
-
-    func setValue<T>(_ value: T, to ptr: OpaquePointer) throws
-    func value(from ptr: OpaquePointer) throws -> Any
-}
-
-
-internal extension ValueManager {
-
-    func setValue<T>(_ value: T, to ptr: OpaquePointer) throws {
-        switch value {
-        case let value as [Any]:
-            for item in value {
-                let itemPtr = try self.createValuePtr(item)
-                try db.check(unqlite_array_add_elem(ptr, nil, itemPtr))
-                self.releaseValuePtr(itemPtr)
-            }
-        case let value as [String: Any]:
-            for (key, value) in value {
-                let itemPtr = try self.createValuePtr(value)
-                try db.check(unqlite_array_add_strkey_elem(ptr, key, itemPtr))
-                self.releaseValuePtr(itemPtr)
-            }
-        case let value as String:
-            try db.check(unqlite_value_string(ptr, value, -1))
-        case let value as Int:
-            try db.check(unqlite_value_int64(ptr, unqlite_int64(value)))
-        case let value as Double:
-            try db.check(unqlite_value_double(ptr, value))
-        case let value as Bool:
-            try db.check(unqlite_value_bool(ptr, value ? 1 : 0))
-        default:
-            throw UnQLiteError.typeCastError
-        }
+    public init(db: Connection, script: String) throws {
+        self.db = db
+        try db.check(unqlite_compile(db.dbPtr, script, -1, &vmPtr))
     }
+
+    deinit {
+        unqlite_vm_release(vmPtr)
+        self.variableNamesRetain.forEach { $0.deallocate() }
+        self.variableNamesRetain.removeAll()
+    }
+
+    public func execute() throws {
+        try db.check(unqlite_vm_exec(vmPtr))
+    }
+
+    public func setVariable<T: Encodable>(value: T, by name: String) throws {
+        let encoder = Jx9Encoder(db: db, ownerPtr: vmPtr)
+        try value.encode(to: encoder)
+
+        let nameUtf8 = name.utf8CString
+        let namePtr = UnsafeMutablePointer<CChar>.allocate(capacity: nameUtf8.count)
+        nameUtf8.withUnsafeBufferPointer { buf in
+            namePtr.assign(from: buf.baseAddress!, count: nameUtf8.count)
+        }
+
+        self.variableNamesRetain.append(namePtr)
+        try db.check(unqlite_vm_config_create_var(vmPtr, namePtr, encoder.mainPtr))
+    }
+
+
+
+    // ------------------------------------------------------------------------------
+
+    public func variableValue(by name: String, release: Bool = false) throws -> Any {
+        var valPtr: OpaquePointer! = nil
+
+        valPtr = unqlite_vm_extract_variable(vmPtr, name)
+        if valPtr == nil {
+            throw UnQLiteError.notFound
+        }
+
+        defer {
+            if release { self.releaseValuePtr(valPtr) }
+        }
+
+        return try self.value(from: valPtr)
+    }
+
+    internal func releaseValuePtr(_ ptr: OpaquePointer) {
+        unqlite_vm_release_value(vmPtr, ptr)
+    }
+
 
     func value(from ptr: OpaquePointer) throws -> Any {
         if unqlite_value_is_json_object(ptr) != 0 {
@@ -98,6 +116,7 @@ internal extension ValueManager {
 
         throw UnQLiteError.typeCastError
     }
+
 }
 
 
@@ -105,10 +124,10 @@ private typealias DictionaryUserData = CallbackUserData<[String: Any]>
 private typealias ArrayUserData = CallbackUserData<[Any]>
 
 private final class CallbackUserData<T> {
-    let vm: ValueManager
+    let vm: CodableVirtualMachine
     var instance: T
 
-    init(_ vm: ValueManager, _ instance: T) {
+    init(_ vm: CodableVirtualMachine, _ instance: T) {
         self.vm = vm
         self.instance = instance
     }
