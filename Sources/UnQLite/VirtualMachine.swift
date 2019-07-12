@@ -21,7 +21,7 @@ public final class VirtualMachine: ValueManager {
         self.variableNamesRetain.removeAll()
     }
     
-    subscript(name: String) -> Any? {
+    public subscript(name: String) -> Any? {
         get {
             return try? self.variableValue(by: name)
         }
@@ -39,13 +39,13 @@ public final class VirtualMachine: ValueManager {
         self.outputCallback = callback
 
         let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
-        try db.check(unqlite_vm_config_output(vmPtr, {(pOutPut, nLen, pUserData) in
+        try db.check(unqlite_vm_config_output(vmPtr, { pOutPut, nLen, pUserData in
             guard let pUserData = pUserData,
-                let string = String(bytesNoCopy: pOutPut!, length: Int(nLen), encoding: .utf8, freeWhenDone: false)  else {
+                let msg = String(bytesNoCopy: pOutPut!, length: Int(nLen), encoding: .utf8, freeWhenDone: false) else {
                     return UNQLITE_ABORT
             }
             let vm = Unmanaged<VirtualMachine>.fromOpaque(pUserData).takeUnretainedValue()
-            vm.outputCallback?(string)
+            vm.outputCallback?(msg)
             return UNQLITE_OK
         }, userDataPtr))
     }

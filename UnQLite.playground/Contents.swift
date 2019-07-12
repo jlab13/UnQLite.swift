@@ -2,8 +2,15 @@ import Foundation
 import UnQLite
 
 
-let id = Expression<Int>("product.id")
-let product = Expression<Int>("product")
-let str = Expression<String>("bla bla")
+do {
+    let db = try Connection()
+    let vm = try db.vm(script: "$vaInt = $valInt;")
 
-(str + "zzz").raw
+    try vm.setVariable(value: 10, by: "valInt")
+    try vm.execute()
+    print(try vm.variableValue(by: "vaInt"))
+
+} catch {
+    print(error)
+}
+

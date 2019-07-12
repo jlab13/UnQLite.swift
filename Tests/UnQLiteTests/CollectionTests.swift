@@ -32,10 +32,10 @@ final class CollectionTests: BaseTestCase {
     override func setUp() {
         super.setUp()
         
-        clProducts = try! db.collection(with: "products")
+        clProducts = try! db.collection(name: "products")
         try! clProducts.store(CollectionTests.productsData)
 
-        clInvoice = try! db.collection(with: "invoice")
+        clInvoice = try! db.collection(name: "invoice")
         try! clInvoice.store(CollectionTests.invoiceData)
     }
 

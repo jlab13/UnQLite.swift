@@ -99,15 +99,13 @@ public final class Collection {
     public func fetch(_ filter: @escaping FilterCallback) throws -> [[String: Any]] {
         let fnName = "_filter_fn"
         let script = "$result = db_fetch_all($collection, _filter_fn)"
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
 
         let context = Context(db: db, callback: filter)
         let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(context).toOpaque())
 
-        try db.check(unqlite_create_function(vm.vmPtr, fnName, { (ctxPtr, nargs, values) in
-            guard nargs == 1 else {
-                return UNQLITE_ABORT
-            }
+        try db.check(unqlite_create_function(vm.vmPtr, fnName, { ctxPtr, nargs, values in
+            guard nargs == 1 else { return UNQLITE_ABORT }
 
             let pUserData = unqlite_context_user_data(ctxPtr)
             let context = Unmanaged<Context>.fromOpaque(pUserData!).takeUnretainedValue()
@@ -137,9 +135,9 @@ public final class Collection {
     }
 
     private func execute<T>(_ script: String, variables: [String: Any]? = nil) throws -> T {
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
         try vm.setVariable(value: self.name, by: "collection")
-        try variables?.forEach { (name, value) in
+        try variables?.forEach { name, value in
             try vm.setVariable(value: value, by: name)
         }
         try vm.execute()
@@ -151,9 +149,9 @@ public final class Collection {
     }
     
     private func execute(_ script: String, variables: [String: Any]? = nil) throws {
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
         try vm.setVariable(value: self.name, by: "collection")
-        try variables?.forEach { (name, value) in
+        try variables?.forEach { name, value in
             try vm.setVariable(value: value, by: name)
         }
         try vm.execute()

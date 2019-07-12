@@ -46,7 +46,7 @@ internal extension ValueManager {
         if unqlite_value_is_json_object(ptr) != 0 {
             let userData = DictionaryUserData(self, [:])
             let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
-            try db.check(unqlite_array_walk(ptr, { (keyPtr, valPtr, userDataPtr) in
+            try db.check(unqlite_array_walk(ptr, { keyPtr, valPtr, userDataPtr in
                 guard let keyPtr = keyPtr, let valPtr = valPtr, let userDataPtr = userDataPtr else {
                     return UNQLITE_ABORT
                 }
@@ -66,7 +66,7 @@ internal extension ValueManager {
         if unqlite_value_is_json_array(ptr) != 0 {
             let userData = ArrayUserData(self, [])
             let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
-            try db.check(unqlite_array_walk(ptr, { (_, valPtr, userDataPtr) in
+            try db.check(unqlite_array_walk(ptr, { _, valPtr, userDataPtr in
                 guard let valPtr = valPtr, let userDataPtr = userDataPtr else {
                     return UNQLITE_ABORT
                 }

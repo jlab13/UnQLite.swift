@@ -3,6 +3,13 @@ import XCTest
 
 
 class ExpressionTests: XCTestCase {
+    static var allTests = [
+        ("testExpression", testExpression),
+        ("testArithmeticOperators", testArithmeticOperators),
+        ("testBitwiseOperators", testBitwiseOperators),
+        ("testComparisonOperators", testComparisonOperators),
+        ("testLogicalOperators", testLogicalOperators),
+    ]
 
     func testExpression() {
         let id = Expression<Int>("id")

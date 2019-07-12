@@ -23,7 +23,7 @@ final class VirtualMachineTests: BaseTestCase {
 
     func testOutPut() throws {
         var outputMsg: String?
-        let vm = try db.vm(with: "print \"Hello world 🌍!\";")
+        let vm = try db.vm(script: "print \"Hello world 🌍!\";")
         try vm.setOutput { outputMsg = $0 }
         try vm.execute()
 
@@ -41,7 +41,7 @@ final class VirtualMachineTests: BaseTestCase {
         $vm_array = [0,1,2,3,4,5,6,7,8,9];
         $vm_obj = {key1: 1, key2: 2};
         """
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
         try vm.execute()
 
         XCTAssertEqual(try vm.variableValue(by: "vm_true") as? Bool, true)
@@ -83,7 +83,7 @@ final class VirtualMachineTests: BaseTestCase {
             "vm_obj_dbl": ["key1": 1.0, "key2": 2.0]
         ]
 
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
         try vm.execute()
 
         let vmObj = try vm.variableValue(by: "obj") as? [String: Any]
@@ -127,7 +127,7 @@ final class VirtualMachineTests: BaseTestCase {
         let sw_double = Double.greatestFiniteMagnitude
         let sw_str    = "Hello VM"
 
-        let vm        = try db.vm(with: script)
+        let vm        = try db.vm(script: script)
 
         try vm.setVariable(value: sw_true, by: "sw_true")
         try vm.setVariable(value: sw_false, by: "sw_false")
@@ -189,7 +189,7 @@ final class VirtualMachineTests: BaseTestCase {
         let sw_double = Double.greatestFiniteMagnitude
         let sw_str    = "Hello VM"
 
-        let vm = try db.vm(with: script)
+        let vm = try db.vm(script: script)
 
         try vm.setVariable(value: sw_true, by: "sw_true")
         try vm.setVariable(value: sw_false, by: "sw_false")

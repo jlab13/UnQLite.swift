@@ -96,11 +96,11 @@ public final class Connection {
         self.dbPtr = nil
     }
     
-    public func vm(with script: String) throws -> VirtualMachine {
+    public func vm(script: String) throws -> VirtualMachine {
         return try VirtualMachine(db: self, script: script)
     }
     
-    public func collection(with name: String) throws -> Collection {
+    public func collection(name: String) throws -> Collection {
         return try Collection(db: self, name: name)
     }
 
@@ -155,7 +155,7 @@ public final class Connection {
     }
 
     public func set(_ value: String, forKey name: String) throws {
-        try value.utf8CString.withUnsafeBytes { (bufPtr)  -> Void in
+        try value.utf8CString.withUnsafeBytes { (bufPtr) -> Void in
             try self.check(unqlite_kv_store(dbPtr, name , -1, bufPtr.baseAddress, unqlite_int64(bufPtr.count)))
         }
     }
