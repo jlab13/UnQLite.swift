@@ -1,12 +1,5 @@
-//
-//  unqlite_wraper.c
-//  CUnQLite
-//
-//  Created by JLab13 on 8/28/18.
-//  Copyright © 2018 Eugene Vorobkalo. All rights reserved.
-//
-
 #include "include/unqlite_wraper.h"
+
 
 int unqlite_config_err_log(unqlite *p_db, const int flag, char **buf, int *len) {
     int rc = unqlite_config(p_db, flag, buf, len);

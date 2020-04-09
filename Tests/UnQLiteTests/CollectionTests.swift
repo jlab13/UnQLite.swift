@@ -43,7 +43,7 @@ final class CollectionTests: BaseTestCase {
     func testCollection() throws {
         XCTAssertEqual(try clProducts.count(), CollectionTests.productsData.count)
 
-        for id in [0, 1, 2, 3] {
+        for id in 0...3 {
             var item = try clProducts.fetch(recordId: id)
             item.removeValue(forKey: "__id")
             XCTAssertTrue(isEqualDict(item, CollectionTests.productsData[id]))

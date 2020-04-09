@@ -22,7 +22,12 @@ public final class CodableVirtualMachine {
     }
 
     public func setVariable<T: Encodable>(value: T, by name: String) throws {
-        let encoder = Jx9Encoder(db: db, ownerPtr: vmPtr)
+        let encoder = Jx9Encoder(db: db, vmPtr: vmPtr)
+        defer {
+            encoder.ptrs.forEach(self.releaseValuePtr)
+            encoder.ptrs.removeAll()
+        }
+
         try value.encode(to: encoder)
 
         let nameUtf8 = name.utf8CString
@@ -32,20 +37,32 @@ public final class CodableVirtualMachine {
         }
 
         self.variableNamesRetain.append(namePtr)
-        try db.check(unqlite_vm_config_create_var(vmPtr, namePtr, encoder.mainPtr))
+        try db.check(unqlite_vm_config_create_var(vmPtr, namePtr, encoder.ptrs.first))
     }
 
 
-
     // ------------------------------------------------------------------------------
+
+    public func variableValue<T: Decodable>(by name: String, type: T.Type) throws -> T {
+        let valPtr = unqlite_vm_extract_variable(vmPtr, name)
+        if valPtr == nil { throw UnQLiteError.notFound }
+
+        let decoder = Jx9Decored(db: self.db, vmPtr: self.vmPtr)
+        decoder.ptrs.append(valPtr!)
+
+        defer {
+            decoder.ptrs.forEach(self.releaseValuePtr)
+            decoder.ptrs.removeAll()
+        }
+
+        return try type.init(from: decoder)
+    }
 
     public func variableValue(by name: String, release: Bool = false) throws -> Any {
         var valPtr: OpaquePointer! = nil
 
         valPtr = unqlite_vm_extract_variable(vmPtr, name)
-        if valPtr == nil {
-            throw UnQLiteError.notFound
-        }
+        if valPtr == nil { throw UnQLiteError.notFound }
 
         defer {
             if release { self.releaseValuePtr(valPtr) }
@@ -112,6 +129,10 @@ public final class CodableVirtualMachine {
 
         if unqlite_value_is_bool(ptr) != 0 {
             return unqlite_value_to_bool(ptr) != 0
+        }
+
+        if unqlite_value_is_null(ptr) != 0 {
+            return NSNull()
         }
 
         throw UnQLiteError.typeCastError

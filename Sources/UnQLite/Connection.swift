@@ -249,9 +249,7 @@ public final class Connection {
     
     @inline(__always)
     internal func check(_ resultCode: CInt, file: String = #file, line: Int = #line) throws {
-        guard resultCode != UNQLITE_OK else {
-            return
-        }
+        guard resultCode != UNQLITE_OK else { return }
         print("EROR: \(file):\(line)")
         throw UnQLiteError(resultCode: resultCode, db: self)
     }

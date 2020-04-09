@@ -3,27 +3,33 @@ import UnQLite
 
 
 struct Test: Encodable {
-    let id: Int = 10
-    let qty: Float = 13.23
-    let price: Double = 123.13
-    let text: String = "Hello"
+    let ival = 1
+    let dval = 1.1
+    let sval = "One"
+    let bval = true
+    let arval = [1, 2, 3, 4]
+    let keyval = ["k1": 1, "k2": 2]
+}
 
-    let ar = [1,2,3,4]
+struct TestCmp: Encodable {
+//    let ival = 1
+//    let t1 = Test()
+//    let t2 = Test()
+    let arrayobj = [Test(), Test(), Test()]
 }
 
 
-//let val = [1,2,3,4]
-//let val = ["k1": 1, "K2": 12.3]
-let val = Test()
+let val = [1, 2, 3]
 
 do {
     let db = try Connection()
-    let vm = try CodableVirtualMachine(db: db, script: "$vaInt = $valInt;")
+    let vm = try CodableVirtualMachine(db: db, script: "$result = $val;")
 
-    try vm.setVariable(value: val, by: "valInt")
+    try vm.setVariable(value: val, by: "val")
     try vm.execute()
-    print(try vm.variableValue(by: "vaInt"))
 
+//    print(try vm.variableValue(by: "result"))
+    print(try vm.variableValue(by: "result", type: [Int].self))
 } catch {
     print(error)
 }

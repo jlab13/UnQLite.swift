@@ -23,18 +23,10 @@
 		6355DAA62173212400359A17 /* unqlite_wraper.c in Sources */ = {isa = PBXBuildFile; fileRef = 6355DA9F2173212400359A17 /* unqlite_wraper.c */; };
 		6355DAA72173212400359A17 /* unqlite_wraper.h in Headers */ = {isa = PBXBuildFile; fileRef = 6355DAA12173212400359A17 /* unqlite_wraper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6355DAA82173212400359A17 /* unqlite.h in Headers */ = {isa = PBXBuildFile; fileRef = 6355DAA22173212400359A17 /* unqlite.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6362674322D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */; };
-		6362674422D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */; };
-		6362674522D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */; };
-		6362674622D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */; };
 		6362674722D8BDEC001ED934 /* Jx9Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674022D8BDEC001ED934 /* Jx9Encoder.swift */; };
 		6362674822D8BDEC001ED934 /* Jx9Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674022D8BDEC001ED934 /* Jx9Encoder.swift */; };
 		6362674922D8BDEC001ED934 /* Jx9Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674022D8BDEC001ED934 /* Jx9Encoder.swift */; };
 		6362674A22D8BDEC001ED934 /* Jx9Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674022D8BDEC001ED934 /* Jx9Encoder.swift */; };
-		6362674B22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */; };
-		6362674C22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */; };
-		6362674D22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */; };
-		6362674E22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */; };
 		6362675422D8C420001ED934 /* CodableVirtualMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362675322D8C420001ED934 /* CodableVirtualMachine.swift */; };
 		6362675522D8C420001ED934 /* CodableVirtualMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362675322D8C420001ED934 /* CodableVirtualMachine.swift */; };
 		6362675622D8C420001ED934 /* CodableVirtualMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362675322D8C420001ED934 /* CodableVirtualMachine.swift */; };
@@ -82,6 +74,10 @@
 		63E84095217345F9003F65FC /* CollectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63715774217323CB00FABA60 /* CollectionTests.swift */; };
 		63E84096217345F9003F65FC /* KeyValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63715777217323CB00FABA60 /* KeyValueTests.swift */; };
 		63E84097217345F9003F65FC /* VirtualMachineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63715773217323CB00FABA60 /* VirtualMachineTests.swift */; };
+		63F65406243EF5E30097E432 /* Jx9Decored.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F65404243EF4210097E432 /* Jx9Decored.swift */; };
+		63F65407243EF5E50097E432 /* Jx9Decored.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F65404243EF4210097E432 /* Jx9Decored.swift */; };
+		63F65408243EF5E50097E432 /* Jx9Decored.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F65404243EF4210097E432 /* Jx9Decored.swift */; };
+		63F65409243EF5E80097E432 /* Jx9Decored.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F65404243EF4210097E432 /* Jx9Decored.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -147,9 +143,7 @@
 		6355DA9F2173212400359A17 /* unqlite_wraper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = unqlite_wraper.c; path = Sources/CUnQLite/unqlite_wraper.c; sourceTree = "<group>"; };
 		6355DAA12173212400359A17 /* unqlite_wraper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unqlite_wraper.h; sourceTree = "<group>"; };
 		6355DAA22173212400359A17 /* unqlite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unqlite.h; sourceTree = "<group>"; };
-		6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Jx9UnkeyedEncoding.swift; sourceTree = "<group>"; };
 		6362674022D8BDEC001ED934 /* Jx9Encoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Jx9Encoder.swift; sourceTree = "<group>"; };
-		6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Jx9KeyedEncoding.swift; sourceTree = "<group>"; };
 		6362675322D8C420001ED934 /* CodableVirtualMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CodableVirtualMachine.swift; path = Sources/UnQLite/CodableVirtualMachine.swift; sourceTree = "<group>"; };
 		6371570A217322F800FABA60 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Errors.swift; path = Sources/UnQLite/Errors.swift; sourceTree = "<group>"; };
 		6371570B217322F800FABA60 /* ValueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ValueManager.swift; path = Sources/UnQLite/ValueManager.swift; sourceTree = "<group>"; };
@@ -173,6 +167,7 @@
 		63E84070217344E4003F65FC /* UnQLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UnQLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E84078217344E4003F65FC /* UnQLiteTests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "UnQLiteTests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63F1C2772177A0C000863044 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
+		63F65404243EF4210097E432 /* Jx9Decored.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Jx9Decored.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -287,7 +282,7 @@
 		6355DA9B2173210E00359A17 /* UnQLite */ = {
 			isa = PBXGroup;
 			children = (
-				6362673E22D8BDEC001ED934 /* Encoder */,
+				6362673E22D8BDEC001ED934 /* Codable */,
 				6353A0972174FC5E0063BE91 /* Jx9 */,
 				637157712173239100FABA60 /* UnQLite.h */,
 				637157702173239100FABA60 /* Info.plist */,
@@ -311,15 +306,14 @@
 			path = Sources/CUnQLite/include;
 			sourceTree = "<group>";
 		};
-		6362673E22D8BDEC001ED934 /* Encoder */ = {
+		6362673E22D8BDEC001ED934 /* Codable */ = {
 			isa = PBXGroup;
 			children = (
 				6362674022D8BDEC001ED934 /* Jx9Encoder.swift */,
-				6362674122D8BDEC001ED934 /* Jx9KeyedEncoding.swift */,
-				6362673F22D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift */,
+				63F65404243EF4210097E432 /* Jx9Decored.swift */,
 			);
-			name = Encoder;
-			path = Sources/UnQLite/Encoder;
+			name = Codable;
+			path = Sources/UnQLite/Codable;
 			sourceTree = "<group>";
 		};
 		63715772217323AD00FABA60 /* UnQLiteTests */ = {
@@ -557,6 +551,7 @@
 				TargetAttributes = {
 					631F555D21732091000A423B = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1140;
 					};
 					637157132173231A00FABA60 = {
 						CreatedOnToolsVersion = 10.0;
@@ -674,10 +669,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63F65406243EF5E30097E432 /* Jx9Decored.swift in Sources */,
 				6371577D2173242200FABA60 /* Collection.swift in Sources */,
-				6362674B22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */,
 				637157812173242200FABA60 /* VirtualMachine.swift in Sources */,
-				6362674322D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */,
 				6353A09E2174FD050063BE91 /* Operators.swift in Sources */,
 				637157802173242200FABA60 /* ValueManager.swift in Sources */,
 				6362675422D8C420001ED934 /* CodableVirtualMachine.swift in Sources */,
@@ -704,10 +698,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63F65408243EF5E50097E432 /* Jx9Decored.swift in Sources */,
 				637157892173242300FABA60 /* Collection.swift in Sources */,
-				6362674D22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */,
 				6371578D2173242300FABA60 /* VirtualMachine.swift in Sources */,
-				6362674522D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */,
 				6353A0A02174FD050063BE91 /* Operators.swift in Sources */,
 				6371578C2173242300FABA60 /* ValueManager.swift in Sources */,
 				6362675622D8C420001ED934 /* CodableVirtualMachine.swift in Sources */,
@@ -734,10 +727,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63F65409243EF5E80097E432 /* Jx9Decored.swift in Sources */,
 				6371578F2173242500FABA60 /* Collection.swift in Sources */,
-				6362674E22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */,
 				637157932173242500FABA60 /* VirtualMachine.swift in Sources */,
-				6362674622D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */,
 				6353A0A12174FD050063BE91 /* Operators.swift in Sources */,
 				637157922173242500FABA60 /* ValueManager.swift in Sources */,
 				6362675722D8C420001ED934 /* CodableVirtualMachine.swift in Sources */,
@@ -752,10 +744,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63F65407243EF5E50097E432 /* Jx9Decored.swift in Sources */,
 				63E8408F217345F1003F65FC /* Collection.swift in Sources */,
-				6362674C22D8BDEC001ED934 /* Jx9KeyedEncoding.swift in Sources */,
 				63E84093217345F1003F65FC /* VirtualMachine.swift in Sources */,
-				6362674422D8BDEC001ED934 /* Jx9UnkeyedEncoding.swift in Sources */,
 				6353A09F2174FD050063BE91 /* Operators.swift in Sources */,
 				63E84092217345F1003F65FC /* ValueManager.swift in Sources */,
 				6362675522D8C420001ED934 /* CodableVirtualMachine.swift in Sources */,
@@ -955,6 +946,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1030,6 +1023,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
+				SWIFT_VERSION = 5.0;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";

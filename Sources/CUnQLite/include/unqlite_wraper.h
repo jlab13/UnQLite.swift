@@ -1,11 +1,3 @@
-//
-//  unqlite_wraper.h
-//  CUnQLite
-//
-//  Created by JLab13 on 8/28/18.
-//  Copyright © 2018 Eugene Vorobkalo. All rights reserved.
-//
-
 #ifndef unqlite_wraper_h
 #define unqlite_wraper_h
 

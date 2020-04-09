@@ -6,7 +6,7 @@ import CUnQLite
 public final class VirtualMachine: ValueManager {
     private var outputCallback: ((String) -> Void)?
     internal let db: Connection
-    internal var vmPtr: OpaquePointer?
+    internal var vmPtr: OpaquePointer!
 
     private var variableNamesRetain = [UnsafePointer<CChar>]()
 
