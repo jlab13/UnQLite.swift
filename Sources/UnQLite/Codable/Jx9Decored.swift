@@ -37,22 +37,12 @@ internal final class Jx9Decored: Decoder {
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         guard unqlite_value_is_json_array(ptr) != 0 else { throw UnQLiteError.typeCastError }
         self.currentIndex = 0
-        log()
-
-        print(unqlite_array_count(ptr))
-        let val = unqlite_array_fetch(ptr, "0", 1)
-        print(val as Any)
-
-//        unqlite_array_walk(ptr, {_, valPtr, _ in
-//            print(valPtr)
-//            return UNQLITE_OK
-//        }, nil)
-
         return self
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        fatalError()
+        guard unqlite_value_is_json_object(ptr) != 0 else { throw UnQLiteError.typeCastError }
+        return KeyedDecodingContainer(Jx9KeyedDecoding<Key>(decoder: self))
     }
 
     @inline(__always)
@@ -158,6 +148,7 @@ extension Jx9Decored: SingleValueDecodingContainer {
 
 
 // MARK: -
+
 extension Jx9Decored: UnkeyedDecodingContainer {
     var isAtEnd: Bool {
         let ptr = unqlite_array_fetch(self.ptr, "\(currentIndex)", -1)
@@ -183,4 +174,63 @@ extension Jx9Decored: UnkeyedDecodingContainer {
     func superDecoder() throws -> Decoder {
         fatalError()
     }
+}
+
+
+// MARK: -
+
+internal struct Jx9KeyedDecoding<K: CodingKey>: KeyedDecodingContainerProtocol {
+    typealias Key = K
+
+    let codingPath: [CodingKey] = []
+    let decoder: Jx9Decored
+
+    var allKeys: [Key]  {
+        let userData = KeyUserData()
+        let userDataPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(userData).toOpaque())
+        unqlite_array_walk(decoder.ptr, { keyPtr, _, userDataPtr in
+            guard let keyPtr = keyPtr, unqlite_value_is_string(keyPtr) != 0, let userDataPtr = userDataPtr else {
+                return UNQLITE_ABORT
+            }
+            let userData = Unmanaged<KeyUserData>.fromOpaque(userDataPtr).takeUnretainedValue()
+            userData.allKeys.append( String(cString: unqlite_value_to_string(keyPtr, nil)) )
+            return UNQLITE_OK
+        }, userDataPtr)
+        return userData.allKeys.compactMap(Key.init)
+    }
+
+    func contains(_ key: Key) -> Bool {
+        allKeys.contains { key.stringValue == $0.stringValue }
+    }
+
+    func decodeNil(forKey key: Key) throws -> Bool { false }
+
+    func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
+        log(val: key.stringValue)
+        guard let valPtr = unqlite_array_fetch(decoder.ptr, key.stringValue, -1) else {
+            throw UnQLiteError.notFound
+        }
+        self.decoder.ptrs.append(valPtr)
+        return try type.init(from: decoder)
+    }
+
+    func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+        fatalError()
+    }
+
+    func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        fatalError()
+    }
+
+    func superDecoder() throws -> Decoder {
+        fatalError()
+    }
+
+    func superDecoder(forKey key: Key) throws -> Decoder {
+        fatalError()
+    }
+}
+
+private final class KeyUserData {
+    var allKeys = [String]()
 }
